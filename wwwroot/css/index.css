@@ -1,0 +1,23 @@
+/* ---- Главная ---- */
+h2{font-size:22px;margin:22px 0 12px}
+h2 + div{display:flex;gap:18px;align-items:flex-start;flex-wrap:wrap;padding:8px 0}
+h2 + div > div, h2 + div > a, h2 + div > div > a{display:flex;flex-direction:column;width:220px;background:#fff;border:1px solid var(--border);padding:8px;text-decoration:none;color:var(--accent)}
+h2 + div > div img, h2 + div > a img, h2 + div > div > a img{width:100%;height:120px;object-fit:cover;display:block;margin-bottom:8px}
+h2 + div > div h3, h2 + div > div > a h3{font-size:14px;margin:4px 0}
+h2 + div > div p{font-size:13px;color:var(--muted);margin:0}
+
+/* ---- Карточки ---- */
+.news-card{width:240px;align-items:stretch; height: 235px;}
+.news-card img{height:120px}
+.news-card h3{font-size:15px;margin:6px 0}
+.news-card p{font-size:13px}
+.recipe-card{display:flex;flex-direction:column;align-items:center;padding:6px}
+.recipe-card img{width:140px;height:110px;object-fit:cover}
+.recipe-card h4{margin:8px 0 0;font-size:15px}
+.category-card{display:flex;flex-direction:column;align-items:center;padding:6px}
+.category-card img{width:200px;height:120px;object-fit:cover}
+.category-card h4{margin:8px 0 0;font-size:18px}
+.news-card, .recipe-card, .category-card{display:flex;flex-direction:column}
+.news-card{cursor:pointer}
+.news-card:hover{box-shadow:0 6px 14px rgba(0,0,0,0.12)}
+.recipe-card:hover, .category-card:hover{box-shadow:0 6px 14px rgba(0,0,0,0.08)}

@@ -1,0 +1,40 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - WebApplication</title>
+    <link rel="stylesheet" href="~/css/index.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/main.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/catalog.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/form.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/recepie.css" asp-append-version="true" />
+</head>
+<body>
+    <header>
+        <img src="~/images/logo.png" alt="Логотип" width="80" />
+        <nav>
+            <a asp-controller="Home" asp-action="Index">Главная</a> |
+            <a asp-controller="Home" asp-action="Catalog">Каталог</a> |
+            <a asp-controller="Home" asp-action="Favorites">Избранное</a> |
+            <a asp-controller="Account" asp-action="Login">Войти</a>
+        </nav>
+    </header>
+    <div class="container">
+        <main role="main" class="pb-3">
+            @RenderBody()
+        </main>
+    </div>
+
+    <footer>
+        <a href="about.html">О нас</a> |
+        <a href="#">ВКонтакте</a> |
+        <a href="#">Telegram</a> |
+        <a href="#">YouTube</a>
+    </footer>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

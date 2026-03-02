@@ -1,0 +1,20 @@
+/* ---- Макет ---- */
+.layout{display:flex;gap:24px;align-items:flex-start}
+.filters{width:260px;background:var(--panel);padding:22px;border:1px solid var(--border)}
+.filters h3{margin-top:0;margin-bottom:12px}
+.filters .group{margin-bottom:18px}
+.filters label{display:flex;align-items:center;gap:8px}
+
+.catalog{flex:1;background:transparent;padding:18px;border:1px solid var(--border);min-height:480px}
+
+/* ---- Карточки ---- */
+.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;align-items:stretch}
+.cards > *{background:#fff;border:1px solid var(--border);padding:8px;display:flex;flex-direction:column;align-items:stretch;height:100%}
+.cards > * img{width:100%;height:140px;object-fit:cover;display:block;margin-bottom:8px}
+.cards > * h3,.cards > * h4{font-size:15px;margin:6px 0}
+.cards > * p{font-size:13px;color:var(--muted);margin:0;flex:1;overflow:hidden}
+.cards > * .meta{font-size:11px;color:var(--muted);margin-top:6px}
+
+/* ---- Карточки с наведением ---- */
+.recipe-card-wrapper{background:#fff;border:1px solid var(--border);height:220px;border-radius:4px}
+.recipe-preview, .recipe-info{border-radius:4px}

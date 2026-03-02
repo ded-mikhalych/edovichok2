@@ -1,0 +1,235 @@
+/* ==== ФОРМА ДОБАВЛЕНИЯ РЕЦЕПТА — ФИНАЛЬНАЯ ВЕРСИЯ ==== */
+form#recipeForm {
+  background: var(--panel);
+  padding: 26px 32px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  max-width: 680px;
+  width: 100%;
+  margin: 0 auto;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+}
+
+/* Заголовки */
+form#recipeForm h3 {
+  margin: 28px 0 14px 0;
+  font-size: 1.35rem;
+  color: var(--text);
+  padding-bottom: 8px;
+}
+form#recipeForm h3:first-of-type { margin-top: 0; }
+
+/* Основные поля */
+form#recipeForm > label,
+form#recipeForm input[type="text"],
+form#recipeForm select,
+form#recipeForm textarea#description {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  margin: 8px 0 16px;
+  padding: 11px 14px;
+  box-sizing: border-box;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 1rem;
+  font-family: inherit;
+}
+
+textarea#description {
+  resize: none;
+  overflow: hidden;
+  min-height: 110px;
+  max-height: 320px;
+  line-height: 1.5;
+}
+
+/* Счётчик описания */
+.char-counter {
+  font-size: 0.9rem;
+  color: var(--muted);
+  text-align: left;
+  margin: -8px 0 16px 4px;
+}
+
+/* === ПОДСКАЗКИ ПОД ПОЛЯМИ (ошибки, подсказки) === */
+.field-hint,
+.error-msg {
+  display: block;
+  font-size: 0.85rem;
+  color: var(--muted);
+  min-height: 22px;
+  margin: 4px 0 12px 4px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  pointer-events: none;
+}
+.field-hint:not(:empty),
+.error-msg:not(:empty) { opacity: 1; }
+.field-hint.error,
+.error-msg.error { color: #e74c3c; opacity: 1; }
+
+/* === ИНГРЕДИЕНТЫ — input и кнопка на одной строке === */
+#ingredients {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 18px 20px;
+  margin: 16px 0 26px;
+}
+
+#ingredients .ingredient {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* Строка: input + кнопка удалить — всегда вместе */
+#ingredients .ingredient .input-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+#ingredients .ingredient input {
+  flex: 1;
+  padding: 11px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+#ingredients .ingredient button {
+  padding: 10px 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: transparent;
+  cursor: pointer;
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+/* Счётчик символов — под строкой */
+.ingredient-counter {
+  font-size: 0.85rem;
+  color: var(--muted);
+  text-align: right;
+  min-height: 20px;
+  margin: 0 4px;
+  opacity: 0.8;
+}
+
+/* Резервируем место под счётчик + подсказку */
+/* #ingredients .ingredient::after {
+  content: "";
+  height: 48px;
+  visibility: hidden;
+} */
+
+/* === КНОПКИ ДОБАВЛЕНИЯ === */
+#addIngredient,
+#addStep {
+  padding: 10px 18px;
+  background: transparent;
+  color: inherit;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.95rem;
+  margin: 8px 0 24px;
+}
+#addIngredient:hover,
+#addStep:hover { background: var(--panel-hover, rgba(0,0,0,0.05)); }
+
+/* === ШАГИ === */
+#steps .step {
+  position: relative;
+  background: #fcfcfc;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 18px 18px 18px 64px;
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.drag-handle {
+  position: absolute;
+  left: 14px; top: 18px;
+  width: 36px; height: 36px;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  cursor: grab;
+  user-select: none;
+}
+.drag-handle:active { cursor: grabbing; }
+
+#steps textarea {
+  width: 100%;
+  min-height: 86px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-sizing: border-box;
+  font-family: inherit;
+  resize: none;
+  overflow: hidden;
+}
+
+.step-counter {
+  font-size: 0.85rem;
+  color: var(--muted);
+  text-align: right;
+  min-height: 20px;
+  margin: 0 4px 6px;
+  opacity: 0.8;
+}
+
+/* Превью */
+.preview {
+  width: 100%;
+  max-width: 320px;
+  height: 240px;
+  object-fit: cover;
+  border-radius: 10px;
+  margin-top: 8px;
+  border: 1px solid var(--border);
+}
+.preview:not([src]), .preview[src=""] { display: none !important; }
+
+.step.dragging { opacity: 0.5; transform: scale(0.97); }
+.step.drag-over { outline: 3px solid var(--accent); outline-offset: -3px; }
+
+.drag-instruction {
+  font-size: 0.94rem;
+  color: var(--muted);
+  margin: 10px 0 18px;
+  line-height: 1.4;
+}
+
+/* Кнопка отправки */
+input[type="submit"] {
+  background: var(--accent);
+  color: white;
+  padding: 16px 36px;
+  font-size: 1.15rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  margin-top: 16px;
+  width: 100%;
+}
+input[type="submit"]:hover { opacity: 0.92; }
+
+/* Адаптивность */
+@media (max-width: 640px) {
+  form#recipeForm { padding: 20px; margin: 0 12px; }
+  #ingredients { grid-template-columns: 1fr; gap: 16px; }
+  .preview { height: 200px; }
+}

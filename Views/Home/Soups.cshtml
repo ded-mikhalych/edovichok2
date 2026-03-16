@@ -1,3 +1,4 @@
+@model IEnumerable<WebApplication.Models.Recipe>
 @{
     ViewData["Title"] = "Кулинарум | Супы";
 }
@@ -8,15 +9,26 @@
 
     <p>При приготовлении супа важны два ключевых элемента: качественный бульон и правильная последовательность добавления ингредиентов. Мясные и костные бульоны требуют времени на медленную варку, чтобы отдать вкус и желирующие вещества; овощные супы выигрывают от использования сезонных овощей, а крем-супы — от последующего пробивания блендером и добавления сливок или растительных альтернатив для бархатистой текстуры.</p>
 
-    <ul>
-        <li><a asp-controller="Home" asp-action="Kharcho">Харчо из говядины с картошкой и помидорами</a></li>
-        <li><a asp-controller="Home" asp-action="Borsch">Борщ — традиционный рецепт</a></li>
-        <li><a asp-controller="Home" asp-action="InDevelopment">Грибной крем-суп</a></li>
-        <li><a asp-controller="Home" asp-action="InDevelopment">Куриный суп с лапшой</a></li>
-        <li><a asp-controller="Home" asp-action="InDevelopment">Суп-пюре из тыквы</a></li>
-        <li><a asp-controller="Home" asp-action="InDevelopment">Овощной минестроне</a></li>
-        <li><a asp-controller="Home" asp-action="InDevelopment">Фо — вьетнамский суп с лапшой</a></li>
-        <li><a asp-controller="Home" asp-action="InDevelopment">Рыбный суп (уха)</a></li>
-        <li><a asp-controller="Home" asp-action="InDevelopment">Холодный свекольник</a></li>
-    </ul>
+    @if (!Model.Any())
+    {
+        <p>Пока в базе нет рецептов супов.</p>
+    }
+    else
+    {
+        <ul>
+            @foreach (var recipe in Model)
+            {
+                <li>
+                    @if (!string.IsNullOrWhiteSpace(recipe.Slug))
+                    {
+                        <a asp-controller="Home" asp-action="Recipe" asp-route-slug="@recipe.Slug">@recipe.Name</a>
+                    }
+                    else
+                    {
+                        <a asp-controller="Home" asp-action="InDevelopment">@recipe.Name</a>
+                    }
+                </li>
+            }
+        </ul>
+    }
 </main>

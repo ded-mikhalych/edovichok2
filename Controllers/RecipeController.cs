@@ -65,6 +65,7 @@ namespace WebApplication.Controllers
                     {
                         r.Id,
                         r.Name,
+                        r.Slug,
                         r.Description,
                         r.Difficulty,
                         r.ImageFileName,

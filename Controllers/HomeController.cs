@@ -62,9 +62,15 @@ namespace WebApplication.Controllers
             return View();
         }
 
-        public IActionResult Favorites()
+        public async Task<IActionResult> Favorites()
         {
-            return View();
+            var favoriteRecipes = await _context.Recipes
+                .Include(r => r.Category)
+                .Where(r => r.IsFavorite)
+                .OrderByDescending(r => r.CreatedAt)
+                .ToListAsync();
+
+            return View(favoriteRecipes);
         }
 
         public IActionResult AddRecipe()
@@ -82,34 +88,91 @@ namespace WebApplication.Controllers
             return View();
         }
 
-        public IActionResult Article3()
+        public async Task<IActionResult> Article3()
         {
-            return View();
+            var article = await _context.News
+                .OrderByDescending(n => n.CreatedAt)
+                .FirstOrDefaultAsync(n => n.Title == "Подсластители под угрозой");
+
+            if (article == null)
+            {
+                return RedirectToAction(nameof(InDevelopment));
+            }
+
+            return View(article);
         }
 
-        public IActionResult Soups()
+        public async Task<IActionResult> Soups()
         {
-            return View();
+            var soups = await _context.Recipes
+                .Include(r => r.Category)
+                .Where(r => r.Category != null && r.Category.Name == "Russian")
+                .OrderBy(r => r.Name)
+                .ToListAsync();
+
+            return View(soups);
+        }
+
+        [HttpGet("home/recipe/{slug}")]
+        public async Task<IActionResult> Recipe(string slug)
+        {
+            var recipe = await _context.Recipes
+                .Include(r => r.Category)
+                .FirstOrDefaultAsync(r => r.Slug == slug);
+
+            if (recipe == null)
+            {
+                return RedirectToAction(nameof(InDevelopment));
+            }
+
+            var ingredients = (recipe.IngredientsText ?? string.Empty)
+                .Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                .ToList();
+
+            var stepLines = (recipe.StepsText ?? string.Empty)
+                .Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+            var imageFolder = string.IsNullOrWhiteSpace(recipe.StepImagesFolder)
+                ? recipe.Slug
+                : recipe.StepImagesFolder;
+
+            var steps = stepLines
+                .Select((text, index) => new RecipeStepViewModel
+                {
+                    Number = index + 1,
+                    Text = text,
+                    ImagePath = $"/images/{imageFolder}/step{index + 1}.jpg"
+                })
+                .ToList();
+
+            var model = new RecipePageViewModel
+            {
+                Recipe = recipe,
+                Ingredients = ingredients,
+                Steps = steps
+            };
+
+            return View(model);
         }
 
         public IActionResult Kharcho()
         {
-            return View();
+            return RedirectToAction(nameof(Recipe), new { slug = "kharcho" });
         }
 
         public IActionResult Mushrooms()
         {
-            return View();
+            return RedirectToAction(nameof(Recipe), new { slug = "mushrooms" });
         }
 
         public IActionResult Olivie()
         {
-            return View();
+            return RedirectToAction(nameof(Recipe), new { slug = "olivie" });
         }
 
         public IActionResult Borsch()
         {
-            return View();
+            return RedirectToAction(nameof(Recipe), new { slug = "borsch" });
         }
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]

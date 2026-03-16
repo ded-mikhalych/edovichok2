@@ -1,0 +1,76 @@
+@model WebApplication.Models.RecipePageViewModel
+@{
+    ViewData["Title"] = $"Кулинарум | {Model.Recipe.Name}";
+
+    string difficultyText = Model.Recipe.Difficulty switch
+    {
+        1 => "Легко",
+        2 => "Средне",
+        3 => "Сложно",
+        _ => "Не указано"
+    };
+}
+
+<main>
+    <h1>@Model.Recipe.Name</h1>
+
+    <div class="recipe-page">
+        <div class="left-col">
+            <aside class="meta">
+                <img src="~/images/@Model.Recipe.ImageFileName" alt="@Model.Recipe.Name" />
+                <div class="actions">
+                    <button type="button">В избранное</button>
+                    <button type="button">Оценить</button>
+                    <p>Рейтинг: @(Model.Recipe.RatingCount > 0 ? Model.AverageRating.ToString("0.0") : "—")</p>
+                </div>
+            </aside>
+
+            <div class="description">
+                <h2>Описание блюда</h2>
+                <p>@Model.Recipe.Description</p>
+                <p><b>Сложность: </b>@difficultyText</p>
+                <p><b>Кухня: </b>@(string.IsNullOrWhiteSpace(Model.Recipe.Cuisine) ? Model.Recipe.Category?.DisplayName : Model.Recipe.Cuisine)</p>
+
+                <h2>Ингредиенты</h2>
+                <div class="ingredients">
+                    <ul>
+                        @foreach (var ingredient in Model.Ingredients)
+                        {
+                            <li>@ingredient</li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="steps">
+            <h2>Рецепт приготовления</h2>
+            @foreach (var step in Model.Steps)
+            {
+                <div class="step">
+                    <img src="@step.ImagePath" alt="Шаг @step.Number" />
+                    <div class="step-content">
+                        <h3>Шаг @step.Number</h3>
+                        <p>@step.Text</p>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</main>
+
+@section Scripts {
+    <script>
+        function syncStepsHeight() {
+            const left = document.querySelector('.recipe-page .left-col');
+            const steps = document.querySelector('.recipe-page .steps');
+            if (!left || !steps) return;
+            const leftRect = left.getBoundingClientRect();
+            steps.style.height = leftRect.height + 'px';
+        }
+        window.addEventListener('load', syncStepsHeight);
+        window.addEventListener('resize', () => { setTimeout(syncStepsHeight, 50); });
+    </script>
+    <script src="~/js/step-modal.js" asp-append-version="true"></script>
+    <script src="~/js/scale-ingredients.js" asp-append-version="true"></script>
+}

@@ -1,11 +1,14 @@
+@model WebApplication.Models.News
 @{
     ViewData["Title"] = "Кулинарум | Подсластители под угрозой";
 }
 
 <main>
-    <h1>Подсластители под угрозой</h1>
+    <h1>@Model.Title</h1>
 
-    <img src="~/images/news3.png" alt="Подсластители под угрозой" style="max-width:100%;height:auto;margin-bottom:16px;" />
+    <img src="~/images/@Model.ImageFileName" alt="@Model.Title" style="max-width:100%;height:auto;margin-bottom:16px;" />
+
+    <p>@Model.Summary</p>
 
     <p>
         Как <a href="https://www.neurology.org/doi/10.1212/WNL.0000000000214023">заявлено</a> в статье для журнала Neurology, группа бразильских специалистов в течение 8 лет изучала сведения о питании и здоровье 12 тыс. человек, средний возраст которых составлял 50 лет. Добровольцы регулярно сообщали, сколько продуктов и напитков с подсластителями они употребляют.

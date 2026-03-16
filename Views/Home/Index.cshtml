@@ -25,16 +25,10 @@
     <div class="cards">
         @foreach (var recipe in Model.NewestRecipes)
         {
-            var recipeAction = recipe.Name switch
-            {
-                "Харчо" => "Kharcho",
-                "Грибы в сметане" => "Mushrooms",
-                "Оливье" => "Olivie",
-                "Борщ" => "Borsch",
-                _ => "Catalog"
-            };
-
-            <a class="recipe-card" asp-controller="Home" asp-action="@recipeAction">
+            <a class="recipe-card"
+               asp-controller="Home"
+               asp-action="@(string.IsNullOrWhiteSpace(recipe.Slug) ? "Catalog" : "Recipe")"
+               asp-route-slug="@recipe.Slug">
                 <img src="~/images/@recipe.ImageFileName" alt="@recipe.Name" />
                 <h4>@recipe.Name</h4>
             </a>

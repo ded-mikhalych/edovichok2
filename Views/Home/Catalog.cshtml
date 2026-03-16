@@ -245,14 +245,8 @@
     }
 
     function getRecipeUrl(recipe) {
-        const routes = {
-            'Харчо': '@Url.Action("Kharcho", "Home")',
-            'Грибы в сметане': '@Url.Action("Mushrooms", "Home")',
-            'Оливье': '@Url.Action("Olivie", "Home")',
-            'Борщ': '@Url.Action("Borsch", "Home")'
-        };
-
-        return routes[recipe.name] || null;
+        if (!recipe.slug) return null;
+        return `/home/recipe/${encodeURIComponent(recipe.slug)}`;
     }
 
     // Render recipe cards

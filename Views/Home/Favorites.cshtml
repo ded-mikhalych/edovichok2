@@ -1,3 +1,4 @@
+@model IEnumerable<WebApplication.Models.Recipe>
 @{
     ViewData["Title"] = "Избранное";
 }
@@ -6,17 +7,27 @@
     <h1>Избранные рецепты</h1>
     <p>В этом разделе собраны рецепты, которые наши пользователи отмечали как особенно удачные, простые в исполнении или незабываемые по вкусу. Избранное — это личная кулинарная коллекция, которая помогает быстро находить проверенные идеи для семейного ужина, праздника или вечернего десерта. Мы поощряем сохранять и делиться рецептами: вы можете добавлять свои находки и оставлять заметки о том, какие изменения проводили в процессе приготовления.</p>
 
-    <ul>
-        <li><a asp-controller="Home" asp-action="Kharcho">Харчо из говядины с картошкой и помидорами</a></li>
-        <li><a asp-controller="Home" asp-action="InDevelopment">Сырники с шоколадной крошкой</a></li>
-        <li><a asp-controller="Home" asp-action="Borsch">Зажарка для борща на зиму</a></li>
-        <li><a asp-controller="Home" asp-action="Olivie">Оливье классический</a></li>
-        <li><a asp-controller="Home" asp-action="InDevelopment">Греческий салат с фетой</a></li>
-        <li><a asp-controller="Home" asp-action="InDevelopment">Котлеты по-домашнему</a></li>
-        <li><a asp-controller="Home" asp-action="Mushrooms">Соленые опята</a></li>
-        <li><a asp-controller="Home" asp-action="InDevelopment">Суп харчо — вегетарианская версия</a></li>
-        <li><a asp-controller="Home" asp-action="InDevelopment">Сырники с ягодным соусом</a></li>
-        <li><a asp-controller="Home" asp-action="InDevelopment">Постный грибной суп</a></li>
-    </ul>
+    @if (!Model.Any())
+    {
+        <p>Пока нет избранных рецептов.</p>
+    }
+    else
+    {
+        <ul>
+            @foreach (var recipe in Model)
+            {
+                <li>
+                    @if (!string.IsNullOrWhiteSpace(recipe.Slug))
+                    {
+                        <a asp-controller="Home" asp-action="Recipe" asp-route-slug="@recipe.Slug">@recipe.Name</a>
+                    }
+                    else
+                    {
+                        <a asp-controller="Home" asp-action="InDevelopment">@recipe.Name</a>
+                    }
+                </li>
+            }
+        </ul>
+    }
 
 </main>

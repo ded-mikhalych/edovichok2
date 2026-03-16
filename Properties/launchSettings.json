@@ -21,7 +21,8 @@
       "launchBrowser": true,
       "launchUrl": "{Scheme}://{ServiceHost}:{ServicePort}",
       "environmentVariables": {
-        "ASPNETCORE_HTTP_PORTS": "8080"
+        "ASPNETCORE_HTTP_PORTS": "8080",
+        "ConnectionStrings__DefaultConnection": "Host=host.docker.internal;Port=5432;Database=RecipesDb;Username=recipes_user;Password=recipes_password_123;"
       },
       "publishAllPorts": true,
       "useSSL": false

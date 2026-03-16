@@ -17,13 +17,15 @@ namespace WebApplication.Controllers
         }
 
         /// <summary>
-        /// Get all recipes with optional search and filters
+        /// Get all recipes with optional search, filters and pagination
         /// </summary>
         [HttpGet("search")]
         public async Task<IActionResult> Search(
             [FromQuery] string query = "",
             [FromQuery] string[]? categories = null,
-            [FromQuery] int[]? difficulties = null)
+            [FromQuery] int[]? difficulties = null,
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 4)
         {
             try
             {
@@ -52,8 +54,13 @@ namespace WebApplication.Controllers
                         difficulties.Contains(r.Difficulty));
                 }
 
+                var totalCount = await recipesQuery.CountAsync();
+                var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
+
                 var recipes = await recipesQuery
                     .OrderByDescending(r => r.CreatedAt)
+                    .Skip((page - 1) * pageSize)
+                    .Take(pageSize)
                     .Select(r => new
                     {
                         r.Id,
@@ -62,11 +69,55 @@ namespace WebApplication.Controllers
                         r.Difficulty,
                         r.ImageFileName,
                         r.CookingTime,
-                        Category = r.Category.DisplayName
+                        Category = r.Category.DisplayName,
+                        r.RatingSum,
+                        r.RatingCount,
+                        AverageRating = r.RatingCount > 0 ? (double)r.RatingSum / r.RatingCount : 0.0
                     })
                     .ToListAsync();
 
-                return Ok(new { success = true, data = recipes, count = recipes.Count });
+                return Ok(new
+                {
+                    success = true,
+                    data = recipes,
+                    count = totalCount,
+                    page = page,
+                    pageSize = pageSize,
+                    totalPages = totalPages
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Rate a recipe (1-5 stars)
+        /// </summary>
+        [HttpPost("{id}/rate")]
+        public async Task<IActionResult> RateRecipe(int id, [FromBody] RateRequest request)
+        {
+            try
+            {
+                if (request.Rating < 1 || request.Rating > 5)
+                    return BadRequest(new { success = false, message = "Оценка должна быть от 1 до 5" });
+
+                var recipe = await _context.Recipes.FindAsync(id);
+                if (recipe == null)
+                    return NotFound(new { success = false, message = "Рецепт не найден" });
+
+                recipe.RatingSum += request.Rating;
+                recipe.RatingCount++;
+                await _context.SaveChangesAsync();
+
+                double averageRating = (double)recipe.RatingSum / recipe.RatingCount;
+                return Ok(new
+                {
+                    success = true,
+                    averageRating = Math.Round(averageRating, 1),
+                    ratingCount = recipe.RatingCount
+                });
             }
             catch (Exception ex)
             {
@@ -159,5 +210,10 @@ namespace WebApplication.Controllers
                 return StatusCode(500, new { success = false, message = ex.Message });
             }
         }
+    }
+
+    public class RateRequest
+    {
+        public int Rating { get; set; }
     }
 }

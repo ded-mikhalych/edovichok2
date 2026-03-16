@@ -1,0 +1,78 @@
+@{
+    ViewData["Title"] = "Кулинарум | Добавить рецепт";
+}
+
+<main>
+    <h1>Добавить рецепт</h1>
+
+    <form id="recipeForm">
+
+        <div class="field">
+            <label>Название:</label><br>
+            <input type="text" name="title" required>
+            <div class="error-msg"></div>
+        </div>
+        <br>
+
+        <div class="field">
+            <label for="description">Описание:</label><br>
+            <textarea name="description" id="description" maxlength="250" required></textarea>
+            <div class="char-counter"><span id="descCount">0</span>/250</div>
+            <div class="error-msg"></div>
+        </div>
+        <br>
+
+        <div class="field">
+            <label for="author">Автор: <span class="required">*</span></label><br>
+            <input type="text" name="author" id="author" required>
+            <div class="error-msg"></div>
+        </div>
+        <br>
+
+        <div class="field">
+            <label for="cuisine">Кухня:</label><br>
+            <input type="text" name="cuisine" id="cuisine">
+            <div class="error-msg"></div>
+        </div>
+        <br>
+
+        <div class="field">
+            <label for="difficulty">Сложность:</label><br>
+            <select name="difficulty" id="difficulty" required>
+                <option value="">Выберите...</option>
+                <option value="easy">Легко</option>
+                <option value="medium">Средне</option>
+                <option value="hard">Сложно</option>
+            </select>
+            <div class="error-msg"></div>
+        </div>
+        <br>
+
+        <div class="field">
+            <h3>Изображение блюда:</h3>
+            <input type="file" name="image" id="recipeImage" accept="image/*">
+            <div class="error-msg"></div>
+        </div>
+        <br>
+
+        <h3>Ингредиенты:</h3>
+        <div id="ingredients"></div>
+        <button type="button" id="addIngredient">+ Добавить ингредиент</button>
+        <br><br>
+
+        <h3>Шаги приготовления:</h3>
+        <p class="drag-instruction">Перетащите шаги за ☰, чтобы изменить порядок.</p>
+        <div id="steps"></div>
+        <button type="button" id="addStep">+ Добавить шаг</button>
+        <br><br>
+
+        <input type="submit" value="Сохранить">
+
+    </form>
+</main>
+
+@section Scripts {
+    <script src="~/js/image-editor.js" asp-append-version="true"></script>
+    <script src="~/js/add-recipe.js" asp-append-version="true"></script>
+    <script src="~/js/validate-form.js" asp-append-version="true"></script>
+}

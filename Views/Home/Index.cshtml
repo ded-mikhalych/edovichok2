@@ -1,4 +1,5 @@
-﻿@{
+@model WebApplication.Models.HomeViewModel
+@{
     ViewData["Title"] = "Кулинарум | Кулинарный портал";
 }
 
@@ -7,55 +8,39 @@
 <div>
     <h2>Кулинарные новости</h2>
     <div>
-        <a class="news-card" href="404.html">
-            <img src="images/news1.png" alt="Чипсы">
-            <h3>Налог на чипсы и газировку</h3>
-            <p>В России предлагают ввести налог на вредные продукты питания.</p>
-        </a>
-        <a class="news-card" href="404.html">
-            <img src="images/news2.png" alt="Фрукты">
-            <h3>Фрукт против похмелья</h3>
-            <p>Учёные нашли фрукт, который помогает быстрее восстановиться.</p>
-        </a>
-        <a class="news-card" href="article3.html">
-            <img src="images/news3.png" alt="Подсластители">
-            <h3>Подсластители под угрозой</h3>
-            <p>Исследователи признали безопасным только один вид подсластителя.</p>
-        </a>
-        <a class="news-card" href="404.html">
-            <img src="images/news4.jpg" alt="Грузинская кухня">
-            <h3>История грузинской кухни</h3>
-            <p>Читайте о традициях и вкусах грузинской кухни.</p>
-        </a>
+        @foreach (var news in Model.LatestNews)
+        {
+            <div class="news-card">
+                <img src="~/images/@news.ImageFileName" alt="@news.Title" />
+                <h3>@news.Title</h3>
+                <p>@news.Summary</p>
+            </div>
+        }
     </div>
 </div>
-
 
 <div>
     <h2>Новые рецепты</h2>
     <div class="cards">
-        <a class="recipe-card" href="olivie.html">
-            <img src="images/olivie.png" alt="Оливье">
-            <h4>Оливье</h4>
-        </a>
-        <a class="recipe-card" href="mushrooms.html">
-            <img src="images/mushrooms.png" alt="Соленые опята">
-            <h4>Соленые опята</h4>
-        </a>
+        @foreach (var recipe in Model.NewestRecipes)
+        {
+            <a class="recipe-card" asp-controller="Home" asp-action="Catalog">
+                <img src="~/images/@recipe.ImageFileName" alt="@recipe.Name" />
+                <h4>@recipe.Name</h4>
+            </a>
+        }
     </div>
-
 </div>
 
 <div>
     <h2>Популярные категории</h2>
     <div class="cards">
-        <a class="category-card" href="soups.html">
-            <img src="images/soups.png" alt="Супы">
-            <h4>Супы</h4>
-        </a>
-        <a class="category-card" href="404.html">
-            <img src="images/salads.png" alt="Салаты">
-            <h4>Салаты</h4>
-        </a>
+        @foreach (var category in Model.PopularCategories)
+        {
+            <a class="category-card" asp-controller="Home" asp-action="Catalog">
+                <h4>@category.DisplayName</h4>
+                <p style="font-size:13px;color:var(--muted);margin:4px 0 0;">@category.RecipeCount блюд</p>
+            </a>
+        }
     </div>
 </div>

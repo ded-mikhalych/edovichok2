@@ -13,5 +13,8 @@ namespace WebApplication.Models
         public Category? Category { get; set; }
 
         public DateTime CreatedAt { get; set; }
+
+        public int RatingSum { get; set; }
+        public int RatingCount { get; set; }
     }
 }

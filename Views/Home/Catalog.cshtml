@@ -45,7 +45,45 @@
     .catalog { display: flex; flex-direction: column; min-height: 640px; }
     #cards { flex: 1 1 auto; }
     .catalog-pagination { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-top: auto; padding-top: 20px; }
-    .recipe-card-wrapper { gap: 0; }
+    .recipe-card-wrapper {
+        position: relative;
+        overflow: hidden;
+        padding: 0;
+        display: block;
+        min-height: 300px;
+        border-radius: 4px;
+    }
+    .recipe-preview,
+    .recipe-info {
+        position: absolute;
+        inset: 0;
+        padding: 10px;
+        background: #fff;
+        display: flex;
+        flex-direction: column;
+        transition: opacity 0.22s ease, transform 0.22s ease;
+    }
+    .recipe-preview { opacity: 1; transform: translateY(0); }
+    .recipe-info {
+        opacity: 0;
+        transform: translateY(10px);
+        pointer-events: none;
+    }
+    .recipe-card-wrapper:hover .recipe-preview { opacity: 0; transform: translateY(-10px); }
+    .recipe-card-wrapper:hover .recipe-info {
+        opacity: 1;
+        transform: translateY(0);
+        pointer-events: auto;
+    }
+    .recipe-preview img {
+        width: 100%;
+        height: 150px;
+        object-fit: cover;
+        border-radius: 4px;
+        margin-bottom: 8px;
+    }
+    .recipe-preview h4 { margin: 6px 0; }
+    .recipe-info h4 { margin: 2px 0 8px; }
     .star-rating { display: flex; gap: 4px; justify-content: flex-start; margin-top: 10px; }
     .star-rating span { font-size: 18px; cursor: pointer; color: #ccc; transition: color 0.15s; }
     .star-rating span.filled { color: #f5a623; }
@@ -268,20 +306,34 @@
 
             const card = document.createElement('article');
             card.className = 'recipe-card-wrapper';
-            card.style.cssText = `overflow:hidden;${recipeUrl ? 'cursor:pointer;' : ''}`;
+            card.style.cssText = recipeUrl ? 'cursor:pointer;' : '';
+
+            const preview = document.createElement('div');
+            preview.className = 'recipe-preview';
+
+            const info = document.createElement('div');
+            info.className = 'recipe-info';
 
             const img = document.createElement('img');
             img.src = recipe.imageFileName.startsWith('https://') ? recipe.imageFileName : `/images/${recipe.imageFileName}`;
             img.alt = recipe.name;
-            img.style.cssText = 'width:100%;height:140px;object-fit:cover;display:block;margin-bottom:8px;';
+            img.style.cssText = 'display:block;';
 
             const title = document.createElement('h4');
             title.textContent = recipe.name;
             title.style.cssText = 'margin:6px 0;';
 
+            const infoTitle = document.createElement('h4');
+            infoTitle.textContent = recipe.name;
+            infoTitle.style.cssText = 'margin:2px 0 8px;';
+
             const description = document.createElement('p');
             description.className = 'recipe-description';
             description.textContent = recipe.description;
+
+            const infoDescription = document.createElement('p');
+            infoDescription.className = 'recipe-description';
+            infoDescription.textContent = recipe.description;
 
             const meta = document.createElement('p');
             meta.className = 'meta';
@@ -365,11 +417,17 @@
             const initialRounded = Math.round(recipe.averageRating);
             starSpans.forEach((s, i) => s.classList.toggle('filled', i < initialRounded));
 
-            card.appendChild(img);
-            card.appendChild(title);
-            card.appendChild(description);
-            card.appendChild(meta);
-            card.appendChild(ratingBlock);
+            preview.appendChild(img);
+            preview.appendChild(title);
+            preview.appendChild(description);
+
+            info.appendChild(infoTitle);
+            info.appendChild(meta);
+            info.appendChild(infoDescription);
+            info.appendChild(ratingBlock);
+
+            card.appendChild(preview);
+            card.appendChild(info);
 
             if (recipeUrl) {
                 card.addEventListener('click', () => {

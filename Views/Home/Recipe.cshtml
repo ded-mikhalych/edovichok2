@@ -36,7 +36,7 @@
                     <ul>
                         @foreach (var ingredient in Model.Ingredients)
                         {
-                            <li>@ingredient</li>
+                            <li>@ingredient.DisplayText</li>
                         }
                     </ul>
                 </div>
@@ -48,10 +48,10 @@
             @foreach (var step in Model.Steps)
             {
                 <div class="step">
-                    <img src="@step.ImagePath" alt="Шаг @step.Number" />
+                    <img src="~/images/@step.ImagePath" alt="Шаг @step.StepNumber" />
                     <div class="step-content">
-                        <h3>Шаг @step.Number</h3>
-                        <p>@step.Text</p>
+                        <h3>Шаг @step.StepNumber</h3>
+                        <p>@step.Description</p>
                     </div>
                 </div>
             }

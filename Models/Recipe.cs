@@ -9,14 +9,13 @@ namespace WebApplication.Models
         public string? Cuisine { get; set; }
         public int Difficulty { get; set; } // 1=Easy, 2=Medium, 3=Hard
         public string? ImageFileName { get; set; }
-        public string? StepImagesFolder { get; set; }
-        public string? IngredientsText { get; set; }
-        public string? StepsText { get; set; }
         public bool IsFavorite { get; set; }
         public int CookingTime { get; set; } // in minutes
 
         public int CategoryId { get; set; }
         public Category? Category { get; set; }
+        public ICollection<RecipeIngredient> Ingredients { get; set; } = new List<RecipeIngredient>();
+        public ICollection<RecipeStep> Steps { get; set; } = new List<RecipeStep>();
 
         public DateTime CreatedAt { get; set; }
 

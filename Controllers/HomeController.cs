@@ -118,6 +118,8 @@ namespace WebApplication.Controllers
         {
             var recipe = await _context.Recipes
                 .Include(r => r.Category)
+                .Include(r => r.Ingredients)
+                .Include(r => r.Steps)
                 .FirstOrDefaultAsync(r => r.Slug == slug);
 
             if (recipe == null)
@@ -125,31 +127,11 @@ namespace WebApplication.Controllers
                 return RedirectToAction(nameof(InDevelopment));
             }
 
-            var ingredients = (recipe.IngredientsText ?? string.Empty)
-                .Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-                .ToList();
-
-            var stepLines = (recipe.StepsText ?? string.Empty)
-                .Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-
-            var imageFolder = string.IsNullOrWhiteSpace(recipe.StepImagesFolder)
-                ? recipe.Slug
-                : recipe.StepImagesFolder;
-
-            var steps = stepLines
-                .Select((text, index) => new RecipeStepViewModel
-                {
-                    Number = index + 1,
-                    Text = text,
-                    ImagePath = $"/images/{imageFolder}/step{index + 1}.jpg"
-                })
-                .ToList();
-
             var model = new RecipePageViewModel
             {
                 Recipe = recipe,
-                Ingredients = ingredients,
-                Steps = steps
+                Ingredients = recipe.Ingredients.OrderBy(i => i.SortOrder).ToList(),
+                Steps = recipe.Steps.OrderBy(s => s.StepNumber).ToList()
             };
 
             return View(model);

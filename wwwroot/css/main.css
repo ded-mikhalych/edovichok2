@@ -24,7 +24,6 @@ body {
 }
 
 main {
-  flex: 1 0 auto; /* Растягивается, занимая всё доступное пространство */
   max-width: var(--max-width);
   margin: 28px auto;
   padding: 0 18px;

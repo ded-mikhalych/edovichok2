@@ -81,8 +81,6 @@ namespace WebApplication.Controllers
                 CookingTime = request.CookingTime > 0 ? request.CookingTime : 30,
                 CategoryId = categoryId,
                 CreatedAt = DateTime.UtcNow,
-                RatingSum = 0,
-                RatingCount = 0,
                 Ingredients = ingredients
                     .Select((text, idx) => new RecipeIngredient
                     {
@@ -178,10 +176,7 @@ namespace WebApplication.Controllers
                         r.Difficulty,
                         r.ImageFileName,
                         r.CookingTime,
-                        Category = r.Category.DisplayName,
-                        r.RatingSum,
-                        r.RatingCount,
-                        AverageRating = r.RatingCount > 0 ? (double)r.RatingSum / r.RatingCount : 0.0
+                        Category = r.Category.DisplayName
                     })
                     .ToListAsync();
 
@@ -201,39 +196,7 @@ namespace WebApplication.Controllers
             }
         }
 
-        /// <summary>
-        /// Rate a recipe (1-5 stars)
-        /// </summary>
-        [HttpPost("{id}/rate")]
-        public async Task<IActionResult> RateRecipe(int id, [FromBody] RateRequest request)
-        {
-            try
-            {
-                if (request.Rating < 1 || request.Rating > 5)
-                    return BadRequest(new { success = false, message = "Оценка должна быть от 1 до 5" });
-
-                var recipe = await _context.Recipes.FindAsync(id);
-                if (recipe == null)
-                    return NotFound(new { success = false, message = "Рецепт не найден" });
-
-                recipe.RatingSum += request.Rating;
-                recipe.RatingCount++;
-                await _context.SaveChangesAsync();
-
-                double averageRating = (double)recipe.RatingSum / recipe.RatingCount;
-                return Ok(new
-                {
-                    success = true,
-                    averageRating = Math.Round(averageRating, 1),
-                    ratingCount = recipe.RatingCount
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { success = false, message = ex.Message });
-            }
-        }
-
+    
         /// <summary>
         /// Get search suggestions (autocomplete)
         /// </summary>

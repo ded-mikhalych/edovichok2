@@ -19,5 +19,8 @@ namespace WebApplication.Models
         public ICollection<RecipeStep> Steps { get; set; } = new List<RecipeStep>();
 
         public DateTime CreatedAt { get; set; }
+        
+        public int RatingSum { get; set; }
+        public int RatingCount { get; set; }
     }
 }

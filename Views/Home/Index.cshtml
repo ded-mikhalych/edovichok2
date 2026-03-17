@@ -35,16 +35,4 @@
     </div>
 </div>
 
-<div>
-    <h2>Популярные категории</h2>
-    <div class="cards">
-        @foreach (var category in Model.PopularCategories)
-        {
-            <a class="category-card" asp-controller="Home" asp-action="@category.ActionName">
-                <img src="~/images/@category.ImageFileName" alt="@category.DisplayName" />
-                <h4>@category.DisplayName</h4>
-                <p class="category-count">@category.RecipeCount блюд</p>
-            </a>
-        }
-    </div>
 </div>

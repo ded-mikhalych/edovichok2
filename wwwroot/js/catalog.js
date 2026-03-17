@@ -231,6 +231,28 @@ function renderRecipes(recipes) {
             <strong>Время:</strong> ${recipe.cookingTime} мин
         `;
 
+        const ratingBlock = document.createElement('div');
+        ratingBlock.style.cssText = 'margin-top:auto;';
+
+        const { stars, countText } = buildStars(recipe.averageRating, recipe.ratingCount);
+
+        const starRow = document.createElement('div');
+        starRow.className = 'star-rating';
+        starRow.innerHTML = stars;
+
+        const avgLabel = document.createElement('div');
+        avgLabel.className = 'avg-rating';
+        avgLabel.id = `avg-${recipe.id}`;
+        avgLabel.textContent = countText;
+
+        const ratedLabel = document.createElement('div');
+        ratedLabel.className = 'rated-label';
+        ratedLabel.id = `rated-${recipe.id}`;
+        if (alreadyRated) ratedLabel.textContent = 'Вы уже оценили';
+
+        ratingBlock.appendChild(starRow);
+        ratingBlock.appendChild(avgLabel);
+        ratingBlock.appendChild(ratedLabel);
         const starSpans = starRow.querySelectorAll('span');
         starSpans.forEach((star, idx) => {
             star.addEventListener('mouseenter', () => {

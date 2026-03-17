@@ -8,7 +8,6 @@ namespace WebApplication.Models
         public string MainImageSrc { get; set; } = string.Empty;
         public string DifficultyText { get; set; } = string.Empty;
         public string CuisineText { get; set; } = string.Empty;
-        public string RatingText { get; set; } = "-";
         public List<string> Ingredients { get; set; } = new();
         public List<RecipeStepViewModel> Steps { get; set; } = new();
     }

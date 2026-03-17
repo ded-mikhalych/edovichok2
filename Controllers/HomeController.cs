@@ -138,7 +138,7 @@ namespace WebApplication.Controllers
         public async Task<IActionResult> Article3()
         {
             var article = await _context.News
-                .FirstOrDefaultAsync(n => n.Title == "Подсластители под угрозой");
+                .FirstOrDefaultAsync(n => n.Title == "С солью, но снижает давление: найден «суперфуд», который можно приготовить дома");
 
             if (article == null)
             {

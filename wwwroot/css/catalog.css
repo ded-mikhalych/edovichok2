@@ -1,114 +1,75 @@
-/* === Карточка === */
-.recipe-card-wrapper {
-  position: relative;
-  overflow: hidden;
-  display: block;
-  min-height: 300px;
+/* ---- Поиск ---- */
+.search-wrapper { position: relative; }
+#searchInput { width: 100%; padding: 8px; }
+#suggestionsList { position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid #ccc; list-style: none; padding: 0; margin: 5px 0 0; display: none; max-height: 200px; overflow-y: auto; z-index: 1000; }
+#resetBtn { margin-right: 10px; }
 
-  background: #fff;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  transition: all 0.3s ease;
+/* ---- Макет ---- */
+.layout{display:flex;gap:24px;align-items:flex-start}
+.filters{width:260px;background:var(--panel);padding:22px;border:1px solid var(--border)}
+.filters h3{margin-top:0;margin-bottom:12px}
+.filters .group{margin-bottom:18px}
+.filters label{display:flex;align-items:center;gap:8px}
+
+.catalog{flex:1;background:transparent;padding:18px;border:1px solid var(--border);min-height:480px}
+
+/* ---- Карточки ---- */
+.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;align-items:stretch}
+.cards > *{background:#fff;border:1px solid var(--border);padding:8px;display:flex;flex-direction:column;align-items:stretch;height:100%}
+.cards > * img{width:100%;height:140px;object-fit:cover;display:block;margin-bottom:8px}
+.cards > * h3,.cards > * h4{font-size:15px;margin:6px 0}
+.cards > * p{font-size:13px;color:var(--muted);margin:0;flex:1;overflow:hidden}
+.cards > * .meta{font-size:11px;color:var(--muted);margin-top:6px}
+
+/* ---- Карточки с наведением ---- */
+.recipe-card-wrapper{background:#fff;border:1px solid var(--border);height:220px;border-radius:4px}
+.recipe-preview, .recipe-info{border-radius:4px}
+
+/* ---- Catalog page (View refactor) ---- */
+.catalog-toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px;max-width:1200px;margin:0 auto;padding:0 18px}
+.add-recipe-button{align-self:flex-start}
+.recipes-count{margin-bottom:15px;color:#666}
+
+.catalog{display:flex;flex-direction:column;min-height:640px}
+#cards{flex:1 1 auto}
+.catalog-pagination{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:auto;padding-top:20px}
+
+.recipe-card-wrapper{
+	position:relative;
+	overflow:hidden;
+	padding:0;
+	display:block;
+	min-height:300px;
+	border-radius:4px;
 }
 
-.recipe-card-wrapper:hover {
-  box-shadow: 0 6px 16px rgba(0,0,0,0.12);
-  transform: translateY(-2px);
-  cursor: pointer;
-}
-
-/* === Слои === */
 .recipe-preview,
-.recipe-info {
-  position: absolute;
-  inset: 0;
-  padding: 12px;
-  background: #fff;
-
-  display: flex;
-  flex-direction: column;
-
-  transition: opacity .25s ease, transform .25s ease;
+.recipe-info{
+	position:absolute;
+	inset:0;
+	padding:10px;
+	background:#fff;
+	display:flex;
+	flex-direction:column;
+	transition:opacity .22s ease,transform .22s ease;
 }
 
-/* анимация */
-.recipe-preview {
-  opacity: 1;
-  transform: translateY(0);
-}
+.recipe-preview{opacity:1;transform:translateY(0)}
+.recipe-info{opacity:0;transform:translateY(10px);pointer-events:none}
+.recipe-card-wrapper:hover .recipe-preview{opacity:0;transform:translateY(-10px)}
+.recipe-card-wrapper:hover .recipe-info{opacity:1;transform:translateY(0);pointer-events:auto}
 
-.recipe-info {
-  opacity: 0;
-  transform: translateY(10px);
-  pointer-events: none;
-}
+.recipe-preview img{width:100%;height:150px;object-fit:cover;border-radius:4px;margin-bottom:8px}
+.recipe-preview h4{margin:6px 0}
+.recipe-info h4{margin:2px 0 8px}
 
-.recipe-card-wrapper:hover .recipe-preview {
-  opacity: 0;
-  transform: translateY(-10px);
-}
-
-.recipe-card-wrapper:hover .recipe-info {
-  opacity: 1;
-  transform: translateY(0);
-  pointer-events: auto;
-}
-
-/* === Картинки === */
-.recipe-preview img {
-  width: 100%;
-  height: 140px;
-  object-fit: cover;
-  margin-bottom: 12px;
-  border-radius: 6px;
-}
-
-/* === Заголовки === */
-.recipe-preview h4,
-.recipe-info h4 {
-  font-size: 16px;
-  margin: 0;
-  line-height: 1.3;
-  text-align: center;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  min-height: 48px;
-}
-
-/* === Описание === */
-.recipe-description {
-  font-size: 13px;
-  color: var(--muted);
-  margin-top: 8px;
-  flex: 1;
-}
-
-/* === Рейтинг === */
-.star-rating {
-  display: flex;
-  gap: 4px;
-  justify-content: center;
-  margin-top: 10px;
-}
-
-.star-rating span {
-  font-size: 18px;
-  cursor: pointer;
-  color: #ccc;
-  transition: color .15s;
-}
-
-.star-rating span.filled,
-.star-rating span:hover {
-  color: #f5a623;
-}
-
-.avg-rating {
-  font-size: 12px;
-  color: var(--muted);
-  text-align: center;
-  margin-top: 4px;
-}
+.star-rating{display:flex;gap:4px;justify-content:flex-start;margin-top:10px}
+.star-rating span{font-size:18px;cursor:pointer;color:#ccc;transition:color .15s}
+.star-rating span.filled{color:#f5a623}
+.star-rating span:hover,.star-rating span.hovered{color:#f5a623}
+.avg-rating{font-size:12px;color:var(--muted);margin-top:4px}
+.rated-label{font-size:12px;color:#5a8f4b;margin-top:4px}
+.recipe-description{min-height:54px}
+.page-btn{padding:6px 14px;border:1px solid var(--border);background:#fff;cursor:pointer;font-size:14px}
+.page-btn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.page-btn:hover:not(.active){background:#eee}

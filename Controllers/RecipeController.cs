@@ -24,17 +24,17 @@ namespace WebApplication.Controllers
         {
             if (string.IsNullOrWhiteSpace(request.Title) || request.Title.Trim().Length < 3)
             {
-                return BadRequest(new { success = false, message = "Название должно содержать минимум 3 символа" });
+                return BadRequest(new { success = false, message = "Название должно содержать минимум 3 символа." });
             }
 
             if (string.IsNullOrWhiteSpace(request.Description) || request.Description.Trim().Length < 10)
             {
-                return BadRequest(new { success = false, message = "Описание должно содержать минимум 10 символов" });
+                return BadRequest(new { success = false, message = "Описание должно содержать минимум 10 символов." });
             }
 
             if (request.Difficulty < 1 || request.Difficulty > 3)
             {
-                return BadRequest(new { success = false, message = "Неверная сложность" });
+                return BadRequest(new { success = false, message = "Выберите корректную сложность." });
             }
 
             var ingredients = request.Ingredients
@@ -49,12 +49,12 @@ namespace WebApplication.Controllers
 
             if (ingredients.Count == 0)
             {
-                return BadRequest(new { success = false, message = "Добавьте хотя бы один ингредиент" });
+                return BadRequest(new { success = false, message = "Добавьте хотя бы один ингредиент." });
             }
 
             if (steps.Count == 0)
             {
-                return BadRequest(new { success = false, message = "Добавьте хотя бы один шаг" });
+                return BadRequest(new { success = false, message = "Добавьте хотя бы один шаг." });
             }
 
             await SyncPrimaryKeySequencesAsync();
@@ -81,31 +81,20 @@ namespace WebApplication.Controllers
                 CookingTime = request.CookingTime > 0 ? request.CookingTime : 30,
                 CategoryId = categoryId,
                 CreatedAt = DateTime.UtcNow,
-                Ingredients = ingredients
-                    .Select((text, idx) => new RecipeIngredient
-                    {
-                        DisplayText = text,
-                        SortOrder = idx + 1
-                    })
-                    .ToList(),
-                Steps = new List<RecipeStep>()
+                RatingSum = 0,
+                RatingCount = 0,
+                Ingredients = ingredients.Select((text, idx) => new RecipeIngredient
+                {
+                    DisplayText = text,
+                    SortOrder = idx + 1
+                }).ToList(),
+                Steps = steps.Select((text, idx) => new RecipeStep
+                {
+                    StepNumber = idx + 1,
+                    Description = text,
+                    ImagePath = string.Empty
+                }).ToList()
             };
-
-            for (var i = 0; i < steps.Count; i++)
-            {
-                var stepImagePath = "salads.png";
-                if (i < request.StepImages.Count && request.StepImages[i] != null && request.StepImages[i].Length > 0)
-                {
-                    stepImagePath = await SaveImageAsync(request.StepImages[i], imageFolder, $"{slug}-step-{i + 1}");
-                }
-
-                recipe.Steps.Add(new RecipeStep
-                {
-                    StepNumber = i + 1,
-                    Description = steps[i],
-                    ImagePath = stepImagePath
-                });
-            }
 
             _context.Recipes.Add(recipe);
             await _context.SaveChangesAsync();
@@ -113,7 +102,7 @@ namespace WebApplication.Controllers
             return Ok(new
             {
                 success = true,
-                message = "Рецепт успешно сохранен",
+                message = "Рецепт успешно сохранён.",
                 data = new
                 {
                     recipe.Id,
@@ -122,9 +111,6 @@ namespace WebApplication.Controllers
             });
         }
 
-        /// <summary>
-        /// Get all recipes with optional search, filters and pagination
-        /// </summary>
         [HttpGet("search")]
         public async Task<IActionResult> Search(
             [FromQuery] string query = "",
@@ -137,7 +123,6 @@ namespace WebApplication.Controllers
             {
                 var recipesQuery = _context.Recipes.Include(r => r.Category).AsQueryable();
 
-                // Search filter
                 if (!string.IsNullOrWhiteSpace(query))
                 {
                     query = query.ToLower().Trim();
@@ -146,7 +131,6 @@ namespace WebApplication.Controllers
                         (r.Description ?? string.Empty).ToLower().Contains(query));
                 }
 
-                // Category filter
                 if (categories != null && categories.Length > 0)
                 {
                     recipesQuery = recipesQuery.Where(r =>
@@ -155,11 +139,9 @@ namespace WebApplication.Controllers
                         categories.Contains(r.Category.Name));
                 }
 
-                // Difficulty filter
                 if (difficulties != null && difficulties.Length > 0)
                 {
-                    recipesQuery = recipesQuery.Where(r =>
-                        difficulties.Contains(r.Difficulty));
+                    recipesQuery = recipesQuery.Where(r => difficulties.Contains(r.Difficulty));
                 }
 
                 var totalCount = await recipesQuery.CountAsync();
@@ -178,10 +160,7 @@ namespace WebApplication.Controllers
                         r.Difficulty,
                         r.ImageFileName,
                         r.CookingTime,
-                        Category = r.Category != null ? r.Category.DisplayName : null,
-                        r.RatingSum,
-                        r.RatingCount,
-                        AverageRating = r.RatingCount > 0 ? (double)r.RatingSum / r.RatingCount : 0.0
+                        Category = r.Category != null ? r.Category.DisplayName : null
                     })
                     .ToListAsync();
 
@@ -190,9 +169,9 @@ namespace WebApplication.Controllers
                     success = true,
                     data = recipes,
                     count = totalCount,
-                    page = page,
-                    pageSize = pageSize,
-                    totalPages = totalPages
+                    page,
+                    pageSize,
+                    totalPages
                 });
             }
             catch (Exception ex)
@@ -201,16 +180,12 @@ namespace WebApplication.Controllers
             }
         }
 
-    
-        /// <summary>
-        /// Get search suggestions (autocomplete)
-        /// </summary>
         [HttpGet("suggestions")]
         public async Task<IActionResult> GetSuggestions([FromQuery] string query = "")
         {
             try
             {
-                if (string.IsNullOrWhiteSpace(query) || query.Length < 1)
+                if (string.IsNullOrWhiteSpace(query))
                 {
                     return Ok(new { success = true, data = new List<object>() });
                 }
@@ -231,10 +206,9 @@ namespace WebApplication.Controllers
                     })
                     .ToListAsync();
 
-                // Also add category suggestions
                 var categorySuggestions = await _context.Categories
                     .Where(c => (c.Name ?? string.Empty).ToLower().Contains(query) ||
-                               (c.DisplayName ?? string.Empty).ToLower().Contains(query))
+                                (c.DisplayName ?? string.Empty).ToLower().Contains(query))
                     .OrderBy(c => c.DisplayName)
                     .Take(5)
                     .Select(c => new
@@ -245,7 +219,9 @@ namespace WebApplication.Controllers
                     })
                     .ToListAsync();
 
-                var allSuggestions = suggestions.Cast<object>().Concat(categorySuggestions.Cast<object>()).ToList();
+                var allSuggestions = suggestions.Cast<object>()
+                    .Concat(categorySuggestions.Cast<object>())
+                    .ToList();
 
                 return Ok(new { success = true, data = allSuggestions });
             }
@@ -255,9 +231,6 @@ namespace WebApplication.Controllers
             }
         }
 
-        /// <summary>
-        /// Get all available categories and difficulties for filter UI
-        /// </summary>
         [HttpGet("filters")]
         public async Task<IActionResult> GetFilters()
         {
@@ -270,46 +243,16 @@ namespace WebApplication.Controllers
 
                 var difficulties = new[]
                 {
-                    new { Id = 1, Name = "Easy", DisplayName = "Лёгкое" },
-                    new { Id = 2, Name = "Medium", DisplayName = "Среднее" },
-                    new { Id = 3, Name = "Hard", DisplayName = "Сложное" }
+                    new { Id = 1, Name = "Easy", DisplayName = "Легко" },
+                    new { Id = 2, Name = "Medium", DisplayName = "Средне" },
+                    new { Id = 3, Name = "Hard", DisplayName = "Сложно" }
                 };
 
                 return Ok(new
                 {
                     success = true,
-                    categories = categories,
-                    difficulties = difficulties
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { success = false, message = ex.Message });
-            }
-        }
-
-        [HttpPost("{id}/rate")]
-        public async Task<IActionResult> RateRecipe(int id, [FromBody] RateRequest request)
-        {
-            try
-            {
-                if (request.Rating < 1 || request.Rating > 5)
-                    return BadRequest(new { success = false, message = "Оценка должна быть от 1 до 5" });
-
-                var recipe = await _context.Recipes.FindAsync(id);
-                if (recipe == null)
-                    return NotFound(new { success = false, message = "Рецепт не найден" });
-
-                recipe.RatingSum += request.Rating;
-                recipe.RatingCount++;
-                await _context.SaveChangesAsync();
-
-                double averageRating = (double)recipe.RatingSum / recipe.RatingCount;
-                return Ok(new
-                {
-                    success = true,
-                    averageRating = Math.Round(averageRating, 1),
-                    ratingCount = recipe.RatingCount
+                    categories,
+                    difficulties
                 });
             }
             catch (Exception ex)
@@ -340,10 +283,9 @@ namespace WebApplication.Controllers
         private static string ToSlug(string text)
         {
             var normalized = text.Trim().ToLowerInvariant();
-            var chars = normalized
-                .Select(ch => char.IsLetterOrDigit(ch) ? ch : '-')
-                .ToArray();
+            var chars = normalized.Select(ch => char.IsLetterOrDigit(ch) ? ch : '-').ToArray();
             var slug = new string(chars);
+
             while (slug.Contains("--"))
             {
                 slug = slug.Replace("--", "-");
@@ -360,12 +302,12 @@ namespace WebApplication.Controllers
             }
 
             var c = cuisine.ToLowerInvariant();
-            if (c.Contains("рус") || c.Contains("slav") || c.Contains("борщ"))
+            if (c.Contains("рус") || c.Contains("slav") || c.Contains("дом"))
             {
                 return 1;
             }
 
-            if (c.Contains("ази") || c.Contains("asia") || c.Contains("thai") || c.Contains("китай") || c.Contains("япон"))
+            if (c.Contains("ази") || c.Contains("asia") || c.Contains("thai") || c.Contains("кит") || c.Contains("япон"))
             {
                 return 3;
             }
@@ -405,5 +347,4 @@ SELECT setval(pg_get_serial_sequence('""RecipeSteps""', 'Id'), COALESCE(MAX(""Id
 ");
         }
     }
-
 }

@@ -32,9 +32,9 @@ public class HomeController : Controller
         return RedirectToPage("/Catalog");
     }
 
-    public Task<IActionResult> Favorites()
+    public Task<IActionResult> Restaurants()
     {
-        return Task.FromResult<IActionResult>(RedirectToPage("/Favorites"));
+        return Task.FromResult<IActionResult>(RedirectToPage("/Restaurants"));
     }
 
     public IActionResult AddRecipe()

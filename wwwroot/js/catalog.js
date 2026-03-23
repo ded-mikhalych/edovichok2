@@ -1,12 +1,10 @@
-const PAGE_SIZE = 8;
-const RATED_KEY = 'rated_recipe_';
+const PAGE_SIZE = 6;
 
 const state = {
     selectedCategories: [],
     selectedDifficulties: [],
     searchQuery: '',
-    currentPage: 1,
-    totalPages: 1
+    currentPage: 1
 };
 
 const presetConfigs = {
@@ -20,7 +18,7 @@ const presetConfigs = {
         query: '',
         categories: ['Russian'],
         difficulties: [1, 2],
-        summary: 'Домашние и более спокойные рецепты для повседневной кухни.'
+        summary: 'Домашние и спокойные рецепты для повседневной кухни.'
     },
     quick: {
         query: '',
@@ -35,10 +33,10 @@ const presetConfigs = {
         summary: 'Более насыщенные рецепты, на которые хочется выделить время.'
     },
     discover: {
-        query: 'сал',
+        query: '',
         categories: ['European', 'Asian'],
         difficulties: [],
-        summary: 'Небольшой сдвиг в сторону менее привычных или более свежих сочетаний.'
+        summary: 'Небольшой сдвиг в сторону менее привычных сочетаний.'
     }
 };
 
@@ -53,10 +51,12 @@ async function loadFilters() {
     try {
         const response = await fetch('/api/recipe/filters');
         const result = await response.json();
-        if (result.success) {
-            renderCategories(result.categories);
-            renderDifficulties(result.difficulties);
+        if (!result.success) {
+            return;
         }
+
+        renderCategories(result.categories);
+        renderDifficulties(result.difficulties);
     } catch (error) {
         console.error('Error loading filters:', error);
     }
@@ -122,7 +122,7 @@ function setupEventListeners() {
                 activatePreset(null);
                 updateCatalogSummary('Поиск работает поверх текущих фильтров и показывает более точечную выдачу.');
                 loadRecipes();
-            }, 300);
+            }, 250);
         } else {
             hideSuggestions();
             state.searchQuery = '';
@@ -147,9 +147,7 @@ function setupEventListeners() {
     });
 
     document.querySelectorAll('.preset-chip').forEach(chip => {
-        chip.addEventListener('click', () => {
-            applyPreset(chip.dataset.preset || 'all');
-        });
+        chip.addEventListener('click', () => applyPreset(chip.dataset.preset || 'all'));
     });
 }
 
@@ -266,7 +264,6 @@ async function loadRecipes() {
         const result = await response.json();
 
         if (result.success) {
-            state.totalPages = result.totalPages;
             renderRecipes(result.data);
             updateRecipesCount(result.count);
             renderPagination(result.page, result.totalPages);
@@ -275,17 +272,6 @@ async function loadRecipes() {
         console.error('Error loading recipes:', error);
         document.getElementById('cards').innerHTML = '<article class="catalog-empty"><p class="card-kicker">Ошибка</p><h3>Не удалось загрузить рецепты.</h3><p>Попробуйте обновить страницу немного позже.</p></article>';
     }
-}
-
-function buildStars(avg, count) {
-    const rounded = Math.round(avg);
-    let stars = '';
-    for (let i = 1; i <= 5; i++) {
-        stars += `<span class="${i <= rounded ? 'filled' : ''}" data-val="${i}">★</span>`;
-    }
-
-    const countText = count > 0 ? `${avg.toFixed(1)} (${count} оц.)` : 'нет оценок';
-    return { stars, countText };
 }
 
 function getRecipeUrl(recipe) {
@@ -303,9 +289,7 @@ function renderRecipes(recipes) {
     }
 
     recipes.forEach(recipe => {
-        const alreadyRated = localStorage.getItem(RATED_KEY + recipe.id) === '1';
         const recipeUrl = getRecipeUrl(recipe);
-
         const card = document.createElement('article');
         card.className = 'recipe-card-wrapper';
         if (recipeUrl) {
@@ -357,86 +341,6 @@ function renderRecipes(recipes) {
         infoDescription.className = 'recipe-description';
         infoDescription.textContent = recipe.description;
 
-        const ratingBlock = document.createElement('div');
-        ratingBlock.className = 'rating-block';
-
-        const { stars, countText } = buildStars(recipe.averageRating, recipe.ratingCount);
-
-        const starRow = document.createElement('div');
-        starRow.className = 'star-rating';
-        starRow.innerHTML = stars;
-
-        const avgLabel = document.createElement('div');
-        avgLabel.className = 'avg-rating';
-        avgLabel.id = `avg-${recipe.id}`;
-        avgLabel.textContent = countText;
-
-        const ratedLabel = document.createElement('div');
-        ratedLabel.className = 'rated-label';
-        ratedLabel.id = `rated-${recipe.id}`;
-        if (alreadyRated) ratedLabel.textContent = 'Вы уже оценили';
-
-        ratingBlock.appendChild(starRow);
-        ratingBlock.appendChild(avgLabel);
-        ratingBlock.appendChild(ratedLabel);
-
-        const starSpans = starRow.querySelectorAll('span');
-        starSpans.forEach((star, index) => {
-            star.addEventListener('mouseenter', () => {
-                if (alreadyRated) return;
-                starSpans.forEach((item, itemIndex) => {
-                    item.classList.toggle('hovered', itemIndex <= index);
-                    item.classList.remove('filled');
-                });
-            });
-
-            star.addEventListener('mouseleave', () => {
-                if (alreadyRated) return;
-                const currentAvg = Math.round(parseFloat(avgLabel.dataset.avg || '0'));
-                starSpans.forEach((item, itemIndex) => {
-                    item.classList.remove('hovered');
-                    item.classList.toggle('filled', itemIndex < currentAvg);
-                });
-            });
-
-            star.addEventListener('click', async event => {
-                event.stopPropagation();
-                if (alreadyRated) return;
-
-                const rating = index + 1;
-                try {
-                    const response = await fetch(`/api/recipe/${recipe.id}/rate`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ rating })
-                    });
-
-                    const result = await response.json();
-                    if (result.success) {
-                        localStorage.setItem(RATED_KEY + recipe.id, '1');
-                        avgLabel.dataset.avg = result.averageRating;
-                        avgLabel.textContent = `${result.averageRating} (${result.ratingCount} оц.)`;
-
-                        const rounded = Math.round(result.averageRating);
-                        starSpans.forEach((item, itemIndex) => {
-                            item.classList.remove('hovered');
-                            item.classList.toggle('filled', itemIndex < rounded);
-                        });
-
-                        ratedLabel.textContent = 'Вы уже оценили';
-                    }
-                } catch (error) {
-                    console.error('Rating error:', error);
-                }
-            });
-        });
-
-        avgLabel.dataset.avg = recipe.averageRating;
-        const initialRounded = Math.round(recipe.averageRating);
-        starSpans.forEach((item, index) => {
-            item.classList.toggle('filled', index < initialRounded);
-        });
-
         preview.appendChild(image);
         preview.appendChild(kicker);
         preview.appendChild(title);
@@ -446,7 +350,6 @@ function renderRecipes(recipes) {
         info.appendChild(badges);
         info.appendChild(meta);
         info.appendChild(infoDescription);
-        info.appendChild(ratingBlock);
 
         card.appendChild(preview);
         card.appendChild(info);

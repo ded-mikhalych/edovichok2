@@ -4,19 +4,19 @@ using WebApplication.Services;
 
 namespace WebApplication.Pages;
 
-public class FavoritesModel : PageModel
+public class RestaurantsModel : PageModel
 {
     private readonly SiteContentService _contentService;
 
-    public FavoritesModel(SiteContentService contentService)
+    public RestaurantsModel(SiteContentService contentService)
     {
         _contentService = contentService;
     }
 
-    public IReadOnlyList<RecipeLinkViewModel> Recipes { get; private set; } = Array.Empty<RecipeLinkViewModel>();
+    public IReadOnlyList<NewsCardViewModel> Reviews { get; private set; } = Array.Empty<NewsCardViewModel>();
 
     public async Task OnGetAsync()
     {
-        Recipes = await _contentService.GetFavoritesAsync();
+        Reviews = await _contentService.GetRestaurantReviewsAsync();
     }
 }

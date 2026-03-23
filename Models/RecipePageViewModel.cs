@@ -7,7 +7,6 @@ namespace WebApplication.Models
         public string Description { get; set; } = string.Empty;
         public string MainImageSrc { get; set; } = string.Empty;
         public string DifficultyText { get; set; } = string.Empty;
-        public string RatingText { get; set; } = "-";
         public string CuisineText { get; set; } = string.Empty;
         public List<string> Ingredients { get; set; } = new();
         public List<RecipeStepViewModel> Steps { get; set; } = new();
@@ -17,6 +16,5 @@ namespace WebApplication.Models
     {
         public int StepNumber { get; set; }
         public string Description { get; set; } = string.Empty;
-        public string ImageSrc { get; set; } = string.Empty;
     }
 }

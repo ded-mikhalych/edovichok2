@@ -15,6 +15,5 @@ namespace WebApplication.Models.Requests
         public List<string> Steps { get; set; } = new();
 
         public IFormFile? MainImage { get; set; }
-        public List<IFormFile> StepImages { get; set; } = new();
     }
 }

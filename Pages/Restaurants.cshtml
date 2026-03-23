@@ -1,0 +1,27 @@
+@page "/restaurants"
+@model WebApplication.Pages.RestaurantsModel
+@{
+    ViewData["Title"] = "Рестораны | Кулинариум";
+}
+
+<section class="page-heading">
+    <p class="eyebrow">Рестораны</p>
+    <h1>Подборка обзоров с акцентом на атмосферу, меню и реальное впечатление от места.</h1>
+    <p class="page-intro">Здесь собраны короткие редакционные обзоры без рейтинговой витрины и без искусственной шкалы оценок.</p>
+</section>
+
+<section class="content-section">
+    <div class="editorial-grid">
+        @foreach (var review in Model.Reviews)
+        {
+            <a class="editorial-card" asp-page="/Article" asp-route-id="@review.ArticleId">
+                <img src="@review.ImageSrc" alt="@review.Title" />
+                <div class="editorial-card-body">
+                    <p class="card-kicker">Обзор</p>
+                    <h3>@review.Title</h3>
+                    <p>@review.Summary</p>
+                </div>
+            </a>
+        }
+    </div>
+</section>

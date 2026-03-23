@@ -26,17 +26,6 @@ public class SiteContentService
             .Take(6)
             .ToListAsync();
 
-        var popularCategories = await _context.Categories
-            .Select(c => new
-            {
-                c.Name,
-                c.DisplayName,
-                RecipeCount = c.Recipes.Count
-            })
-            .OrderByDescending(c => c.RecipeCount)
-            .Take(4)
-            .ToListAsync();
-
         return new HomeViewModel
         {
             LatestNews = latestNews.Select(n => new NewsCardViewModel
@@ -55,14 +44,23 @@ public class SiteContentService
                 ImageSrc = ResolveImagePath(r.ImageFileName),
                 ActionName = string.IsNullOrWhiteSpace(r.Slug) ? "InDevelopment" : "Recipe"
             }).ToList(),
-            PopularCategories = popularCategories.Select(c => new CategoryCardViewModel
-            {
-                DisplayName = c.DisplayName ?? string.Empty,
-                ActionName = c.Name == "Russian" ? "Soups" : "InDevelopment",
-                ImageFileName = c.Name == "Russian" ? "soups.png" : "salads.png",
-                RecipeCount = c.RecipeCount
-            }).ToList()
+            PopularCategories = new List<CategoryCardViewModel>()
         };
+    }
+
+    public async Task<List<NewsCardViewModel>> GetRestaurantReviewsAsync()
+    {
+        return await _context.News
+            .OrderByDescending(n => n.CreatedAt)
+            .Select(n => new NewsCardViewModel
+            {
+                ArticleId = n.Id,
+                Title = n.Title ?? string.Empty,
+                Summary = n.Summary ?? string.Empty,
+                ImageSrc = ResolveImagePath(n.ImageFileName),
+                ActionName = "Article"
+            })
+            .ToListAsync();
     }
 
     public async Task<ArticleViewModel?> GetArticleAsync(int id)
@@ -105,9 +103,6 @@ public class SiteContentService
             CuisineText = string.IsNullOrWhiteSpace(recipe.Cuisine)
                 ? recipe.Category?.DisplayName ?? "Не указано"
                 : recipe.Cuisine,
-            RatingText = recipe.RatingCount > 0
-                ? ((double)recipe.RatingSum / recipe.RatingCount).ToString("0.0")
-                : "—",
             Ingredients = recipe.Ingredients
                 .OrderBy(i => i.SortOrder)
                 .Select(i => i.DisplayText)
@@ -117,25 +112,10 @@ public class SiteContentService
                 .Select(s => new RecipeStepViewModel
                 {
                     StepNumber = s.StepNumber,
-                    Description = s.Description,
-                    ImageSrc = ResolveImagePath(s.ImagePath)
+                    Description = s.Description
                 })
                 .ToList()
         };
-    }
-
-    public async Task<List<RecipeLinkViewModel>> GetFavoritesAsync()
-    {
-        return await _context.Recipes
-            .Where(r => r.IsFavorite)
-            .OrderByDescending(r => r.CreatedAt)
-            .Select(r => new RecipeLinkViewModel
-            {
-                Name = r.Name ?? string.Empty,
-                ActionName = string.IsNullOrWhiteSpace(r.Slug) ? "InDevelopment" : "Recipe",
-                Slug = r.Slug
-            })
-            .ToListAsync();
     }
 
     public async Task<List<RecipeLinkViewModel>> GetSoupsAsync()

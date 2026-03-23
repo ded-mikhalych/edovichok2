@@ -13,7 +13,6 @@
     <div class="recipe-stat-pills">
         <span class="stat-pill">Сложность: @Model.Recipe.DifficultyText</span>
         <span class="stat-pill">Кухня: @Model.Recipe.CuisineText</span>
-        <span class="stat-pill">Рейтинг: @Model.Recipe.RatingText</span>
         <span class="stat-pill">Шагов: @Model.Recipe.Steps.Count</span>
     </div>
 
@@ -37,7 +36,6 @@
                 <div><dt>Автор</dt><dd>@Model.Recipe.AuthorText</dd></div>
                 <div><dt>Сложность</dt><dd>@Model.Recipe.DifficultyText</dd></div>
                 <div><dt>Кухня</dt><dd>@Model.Recipe.CuisineText</dd></div>
-                <div><dt>Рейтинг</dt><dd>@Model.Recipe.RatingText</dd></div>
             </dl>
         </div>
     </aside>
@@ -71,7 +69,6 @@
                 @foreach (var step in Model.Recipe.Steps)
                 {
                     <article class="step">
-                        <img src="@step.ImageSrc" alt="Шаг @step.StepNumber" />
                         <div class="step-content">
                             <h3>Шаг @step.StepNumber</h3>
                             <p>@step.Description</p>
@@ -85,6 +82,5 @@
 
 @section Scripts {
     <script src="~/js/recipe-page.js" asp-append-version="true"></script>
-    <script src="~/js/step-modal.js" asp-append-version="true"></script>
     <script src="~/js/scale-ingredients.js" asp-append-version="true"></script>
 }

@@ -44,23 +44,14 @@ public class SiteContentService
                 ImageSrc = ResolveImagePath(r.ImageFileName),
                 ActionName = string.IsNullOrWhiteSpace(r.Slug) ? "InDevelopment" : "Recipe"
             }).ToList(),
+            RestaurantReviews = GetRestaurantReviews(),
             PopularCategories = new List<CategoryCardViewModel>()
         };
     }
 
-    public async Task<List<NewsCardViewModel>> GetRestaurantReviewsAsync()
+    public Task<List<RestaurantReviewCardViewModel>> GetRestaurantReviewsAsync()
     {
-        return await _context.News
-            .OrderByDescending(n => n.CreatedAt)
-            .Select(n => new NewsCardViewModel
-            {
-                ArticleId = n.Id,
-                Title = n.Title ?? string.Empty,
-                Summary = n.Summary ?? string.Empty,
-                ImageSrc = ResolveImagePath(n.ImageFileName),
-                ActionName = "Article"
-            })
-            .ToListAsync();
+        return Task.FromResult(GetRestaurantReviews());
     }
 
     public async Task<ArticleViewModel?> GetArticleAsync(int id)
@@ -161,6 +152,45 @@ public class SiteContentService
             2 => "Средне",
             3 => "Сложно",
             _ => "Не указано"
+        };
+    }
+
+    private static List<RestaurantReviewCardViewModel> GetRestaurantReviews()
+    {
+        return new List<RestaurantReviewCardViewModel>
+        {
+            new()
+            {
+                Title = "Basil Market",
+                Summary = "Спокойное городское бистро с сильными завтраками, ровным сервисом и хорошей базовой кухней без показной сложности.",
+                ImageSrc = "/images/news1.png",
+                District = "Ленинский район",
+                Format = "Бистро на каждый день"
+            },
+            new()
+            {
+                Title = "Nord Bread",
+                Summary = "Пекарня с полноценной кухней: особенно хороши хлебная витрина, суп дня и тёплая посадка для длинных разговоров.",
+                ImageSrc = "/images/news2.png",
+                District = "Центр",
+                Format = "Пекарня-ресторан"
+            },
+            new()
+            {
+                Title = "Saffron Yard",
+                Summary = "Яркое место с громким характером, пряной кухней и хорошей энергией в зале. Лучше для компании, чем для тихого ужина.",
+                ImageSrc = "/images/news3.png",
+                District = "Набережная",
+                Format = "Современный casual"
+            },
+            new()
+            {
+                Title = "Garden Room",
+                Summary = "Тихий ресторан с сильной овощной линией, аккуратной подачей и блюдами из духовки, к которым хочется возвращаться.",
+                ImageSrc = "/images/news4.png",
+                District = "Старая Самара",
+                Format = "Спокойный ресторан"
+            }
         };
     }
 }

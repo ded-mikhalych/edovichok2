@@ -33,8 +33,14 @@
             </div>
 
             <div class="field">
-                <label for="cuisine">Кухня</label>
-                <input type="text" name="cuisine" id="cuisine" />
+                <label for="dishType">Тип блюда</label>
+                <select name="cuisine" id="dishType" required>
+                    <option value="">Выберите...</option>
+                    <option value="first-course">Первое</option>
+                    <option value="second-course">Второе</option>
+                    <option value="pastry">Выпечка</option>
+                    <option value="drinks">Напитки</option>
+                </select>
                 <div class="error-msg"></div>
             </div>
         </div>

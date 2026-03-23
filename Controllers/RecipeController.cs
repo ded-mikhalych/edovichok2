@@ -230,7 +230,7 @@ namespace WebApplication.Controllers
                     .ToListAsync();
 
                 var normalizedIngredientSuggestions = ingredientSuggestions
-                    .Select(GetIngredientFilterLabel)
+                    .Select(GetPrimaryIngredientFilter)
                     .Where(i => !string.IsNullOrWhiteSpace(i) && i.ToLower().Contains(query))
                     .Distinct(StringComparer.OrdinalIgnoreCase)
                     .OrderBy(i => i)
@@ -272,7 +272,7 @@ namespace WebApplication.Controllers
                     .ToListAsync();
 
                 var ingredientFilters = ingredients
-                    .Select(GetIngredientFilterLabel)
+                    .Select(GetPrimaryIngredientFilter)
                     .Where(i => !string.IsNullOrWhiteSpace(i))
                     .Distinct(StringComparer.OrdinalIgnoreCase)
                     .OrderBy(i => i)
@@ -331,6 +331,18 @@ namespace WebApplication.Controllers
                 return 2;
 
             var c = cuisine.ToLowerInvariant();
+            if (c == "first-course")
+                return 1;
+
+            if (c == "second-course")
+                return 2;
+
+            if (c == "pastry")
+                return 3;
+
+            if (c == "drinks")
+                return 4;
+
             if (c.Contains("перв") || c.Contains("суп") || c.Contains("бульон"))
                 return 1;
 
@@ -346,20 +358,27 @@ namespace WebApplication.Controllers
             return 2;
         }
 
-        private static string GetIngredientFilterLabel(string displayText)
+        private static string GetPrimaryIngredientFilter(string displayText)
         {
             if (string.IsNullOrWhiteSpace(displayText))
                 return string.Empty;
 
-            var separators = new[] { "—", "-", "," };
-            foreach (var separator in separators)
-            {
-                var index = displayText.IndexOf(separator, StringComparison.Ordinal);
-                if (index > 0)
-                    return displayText[..index].Trim();
-            }
+            var normalized = displayText.ToLowerInvariant();
 
-            return displayText.Trim();
+            return normalized switch
+            {
+                var s when s.Contains("кур") => "Курица",
+                var s when s.Contains("картоф") => "Картофель",
+                var s when s.Contains("тыкв") => "Тыква",
+                var s when s.Contains("творог") => "Творог",
+                var s when s.Contains("варень") => "Варенье",
+                var s when s.Contains("рис") => "Рис",
+                var s when s.Contains("помидор") || s.Contains("томат") => "Томаты",
+                var s when s.Contains("ягод") => "Ягоды",
+                var s when s.Contains("лимон") => "Лимон",
+                var s when s.Contains("фет") => "Фета",
+                _ => string.Empty
+            };
         }
 
         private static async Task<string> SaveImageAsync(IFormFile file, string folderPath, string filePrefix)

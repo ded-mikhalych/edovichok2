@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
         title: 'Обязательно, минимум 3 символа',
         description: 'Обязательно, от 10 до 250 символов',
         author: 'Можно оставить пустым или указать минимум 2 символа',
-        cuisine: 'Например: домашняя, европейская, азиатская',
+        cuisine: 'Обязательно выберите тип блюда',
         difficulty: 'Обязательно выберите сложность',
         'ingredients[]': 'Добавьте хотя бы один ингредиент',
         'steps[]': 'Добавьте хотя бы один шаг длиной от 10 символов',
@@ -37,10 +37,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (input.name === 'title') return input.value.trim().length >= 3;
         if (input.name === 'description') return input.value.trim().length >= 10;
         if (input.name === 'author') return !input.value.trim() || input.value.trim().length >= 2;
-        if (input.name === 'cuisine') {
-            const value = input.value.trim();
-            return !value || (value.length >= 3 && /^[\p{L}\s-]+$/u.test(value));
-        }
+        if (input.name === 'cuisine') return ['first-course', 'second-course', 'pastry', 'drinks'].includes(input.value);
         if (input.name === 'difficulty') return ['easy', 'medium', 'hard'].includes(input.value);
         if (input.name === 'ingredients[]') return input.value.trim().length > 0;
         if (input.name === 'steps[]') return input.value.trim().length >= 10;
@@ -137,14 +134,9 @@ document.addEventListener('DOMContentLoaded', () => {
             firstInvalid ??= author;
         }
 
-        if (cuisine && cuisine.value.trim().length > 0) {
-            if (cuisine.value.trim().length < 3) {
-                errors.push('Поле "Кухня" должно содержать не менее 3 символов');
-                firstInvalid ??= cuisine;
-            } else if (!/^[\p{L}\s-]+$/u.test(cuisine.value.trim())) {
-                errors.push('Поле "Кухня" должно содержать только буквы, пробелы и дефисы');
-                firstInvalid ??= cuisine;
-            }
+        if (!cuisine || !['first-course', 'second-course', 'pastry', 'drinks'].includes(cuisine.value)) {
+            errors.push('Выберите тип блюда');
+            firstInvalid ??= cuisine;
         }
 
         const ingredientsFilled = ingredientInputs.map(input => input.value.trim()).filter(Boolean);

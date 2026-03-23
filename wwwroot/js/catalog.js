@@ -2,7 +2,6 @@ const PAGE_SIZE = 6;
 
 const state = {
     selectedCategories: [],
-    selectedDifficulties: [],
     searchQuery: '',
     currentPage: 1
 };
@@ -11,32 +10,27 @@ const presetConfigs = {
     all: {
         query: '',
         categories: [],
-        difficulties: [],
         summary: 'Показываем весь каталог без дополнительных ограничений.'
     },
-    comfort: {
+    everyday: {
         query: '',
-        categories: ['Russian'],
-        difficulties: [1, 2],
-        summary: 'Домашние и спокойные рецепты для повседневной кухни.'
+        categories: ['everyday'],
+        summary: 'Подборка для обычных дней: понятные блюда, к которым легко возвращаться.'
     },
-    quick: {
+    teaBreak: {
         query: '',
-        categories: [],
-        difficulties: [1],
-        summary: 'Сейчас в фокусе самые простые сценарии приготовления.'
+        categories: ['tea-break'],
+        summary: 'Здесь собраны рецепты для спокойного завтрака и домашнего чаепития.'
     },
-    weekend: {
+    meatless: {
         query: '',
-        categories: [],
-        difficulties: [2, 3],
-        summary: 'Более насыщенные рецепты, на которые хочется выделить время.'
+        categories: ['meatless'],
+        summary: 'Рецепты без мясного акцента, где основную работу делают овощи, крупы и сыр.'
     },
-    discover: {
+    quickDinner: {
         query: '',
-        categories: ['European', 'Asian'],
-        difficulties: [],
-        summary: 'Небольшой сдвиг в сторону менее привычных сочетаний.'
+        categories: ['everyday', 'meatless'],
+        summary: 'Небольшая подборка для быстрого ужина без сложных сценариев и лишних продуктов.'
     }
 };
 
@@ -56,7 +50,6 @@ async function loadFilters() {
         }
 
         renderCategories(result.categories);
-        renderDifficulties(result.difficulties);
     } catch (error) {
         console.error('Error loading filters:', error);
     }
@@ -77,28 +70,6 @@ function renderCategories(categories) {
 
         const text = document.createElement('span');
         text.textContent = category.displayName;
-
-        label.appendChild(input);
-        label.appendChild(text);
-        container.appendChild(label);
-    });
-}
-
-function renderDifficulties(difficulties) {
-    const container = document.getElementById('difficultiesContainer');
-    container.innerHTML = '';
-
-    difficulties.forEach(diff => {
-        const label = document.createElement('label');
-        label.className = 'filter-option';
-
-        const input = document.createElement('input');
-        input.type = 'checkbox';
-        input.value = diff.id;
-        input.className = 'difficulty-filter';
-
-        const text = document.createElement('span');
-        text.textContent = diff.displayName;
 
         label.appendChild(input);
         label.appendChild(text);
@@ -152,14 +123,13 @@ function setupEventListeners() {
 }
 
 function resetFilters() {
-    document.querySelectorAll('.category-filter, .difficulty-filter').forEach(el => {
+    document.querySelectorAll('.category-filter').forEach(el => {
         el.checked = false;
     });
 
     document.getElementById('searchInput').value = '';
     state.searchQuery = '';
     state.selectedCategories = [];
-    state.selectedDifficulties = [];
     state.currentPage = 1;
     hideSuggestions();
 }
@@ -169,17 +139,12 @@ function applyPreset(presetName) {
 
     state.searchQuery = preset.query;
     state.selectedCategories = [...preset.categories];
-    state.selectedDifficulties = [...preset.difficulties];
     state.currentPage = 1;
 
     document.getElementById('searchInput').value = preset.query;
 
     document.querySelectorAll('.category-filter').forEach(input => {
         input.checked = state.selectedCategories.includes(input.value);
-    });
-
-    document.querySelectorAll('.difficulty-filter').forEach(input => {
-        input.checked = state.selectedDifficulties.includes(Number.parseInt(input.value, 10));
     });
 
     activatePreset(presetName);
@@ -246,7 +211,6 @@ function hideSuggestions() {
 
 function updateSelectedFilters() {
     state.selectedCategories = Array.from(document.querySelectorAll('.category-filter:checked')).map(el => el.value);
-    state.selectedDifficulties = Array.from(document.querySelectorAll('.difficulty-filter:checked')).map(el => Number.parseInt(el.value, 10));
 }
 
 async function loadRecipes() {
@@ -256,7 +220,6 @@ async function loadRecipes() {
         const params = new URLSearchParams();
         if (state.searchQuery) params.append('query', state.searchQuery);
         state.selectedCategories.forEach(cat => params.append('categories', cat));
-        state.selectedDifficulties.forEach(diff => params.append('difficulties', diff));
         params.append('page', state.currentPage);
         params.append('pageSize', PAGE_SIZE);
 
@@ -325,15 +288,14 @@ function renderRecipes(recipes) {
         const badges = document.createElement('div');
         badges.className = 'catalog-badges';
         badges.innerHTML = `
-            <span>${getDifficultyText(recipe.difficulty)}</span>
+            <span>${recipe.category || 'Подборка не указана'}</span>
             <span>${recipe.cookingTime} мин</span>
         `;
 
         const meta = document.createElement('p');
         meta.className = 'meta';
         meta.innerHTML = `
-            <strong>Кухня:</strong> ${recipe.category || 'Не указана'}<br>
-            <strong>Сложность:</strong> ${getDifficultyText(recipe.difficulty)}<br>
+            <strong>Подборка:</strong> ${recipe.category || 'Не указана'}<br>
             <strong>Время:</strong> ${recipe.cookingTime} мин
         `;
 
@@ -362,16 +324,6 @@ function renderRecipes(recipes) {
 
         container.appendChild(card);
     });
-}
-
-function getDifficultyText(difficulty) {
-    const map = {
-        1: 'Легко',
-        2: 'Средне',
-        3: 'Сложно'
-    };
-
-    return map[difficulty] || 'Неизвестно';
 }
 
 function updateRecipesCount(count) {

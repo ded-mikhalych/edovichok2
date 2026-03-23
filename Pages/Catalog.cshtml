@@ -6,30 +6,23 @@
 
 <section class="page-heading">
     <p class="eyebrow">Рецепты</p>
-    <h1>Поиск по блюдам, кухням и сложности без лишних служебных блоков.</h1>
+    <h1>Поиск по блюдам и редакционным подборкам без лишних служебных блоков.</h1>
     <p class="page-intro">
-        В каталоге теперь меньше рецептов на одной странице, а карточки показывают только главное:
-        блюдо, описание и базовые параметры.
+        Вместо кухни и сложности здесь теперь работают более живые группы: рецепты на каждый день,
+        блюда к завтраку и чаю, а также варианты без мясного акцента.
     </p>
 </section>
 
 <section class="preset-strip" aria-label="Быстрые сценарии выбора">
     <button type="button" class="preset-chip is-active" data-preset="all">Все рецепты</button>
-    <button type="button" class="preset-chip" data-preset="comfort">Домашнее</button>
-    <button type="button" class="preset-chip" data-preset="quick">Быстро</button>
-    <button type="button" class="preset-chip" data-preset="weekend">На выходные</button>
-    <button type="button" class="preset-chip" data-preset="discover">Что-то новое</button>
+    <button type="button" class="preset-chip" data-preset="everyday">На каждый день</button>
+    <button type="button" class="preset-chip" data-preset="teaBreak">К чаю и завтраку</button>
+    <button type="button" class="preset-chip" data-preset="meatless">Без мяса</button>
+    <button type="button" class="preset-chip" data-preset="quickDinner">Быстрый ужин</button>
 </section>
 
 <section class="catalog-shell">
     <aside class="catalog-sidebar">
-        <div class="sidebar-card accent-card">
-            <p class="card-kicker">Новый сценарий</p>
-            <h2>Добавьте авторский рецепт</h2>
-            <p>Форма стала проще: одна главная фотография, ингредиенты и текстовые шаги без пошаговой галереи.</p>
-            <a class="button button-primary" asp-page="/AddRecipe">Открыть форму</a>
-        </div>
-
         <div class="sidebar-card">
             <p class="card-kicker">Фильтры</p>
             <div id="filtersContainer">
@@ -39,11 +32,8 @@
                     <ul id="suggestionsList"></ul>
                 </div>
 
-                <label class="field-label">Кухня</label>
+                <label class="field-label">Подборка</label>
                 <div id="categoriesContainer" class="filter-group"></div>
-
-                <label class="field-label">Сложность</label>
-                <div id="difficultiesContainer" class="filter-group"></div>
 
                 <div class="filter-actions">
                     <button id="resetBtn" type="button" class="button button-secondary">Сбросить</button>

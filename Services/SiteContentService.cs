@@ -122,7 +122,7 @@ public class SiteContentService
     {
         return await _context.Recipes
             .Include(r => r.Category)
-            .Where(r => r.Category != null && r.Category.Name == "Russian")
+            .Where(r => r.CategoryId == 1)
             .OrderBy(r => r.Name)
             .Select(r => new RecipeLinkViewModel
             {

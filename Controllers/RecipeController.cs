@@ -115,7 +115,6 @@ namespace WebApplication.Controllers
         public async Task<IActionResult> Search(
             [FromQuery] string query = "",
             [FromQuery] string[]? categories = null,
-            [FromQuery] int[]? difficulties = null,
             [FromQuery] int page = 1,
             [FromQuery] int pageSize = 4)
         {
@@ -137,11 +136,6 @@ namespace WebApplication.Controllers
                         r.Category != null &&
                         r.Category.Name != null &&
                         categories.Contains(r.Category.Name));
-                }
-
-                if (difficulties != null && difficulties.Length > 0)
-                {
-                    recipesQuery = recipesQuery.Where(r => difficulties.Contains(r.Difficulty));
                 }
 
                 var totalCount = await recipesQuery.CountAsync();
@@ -241,18 +235,10 @@ namespace WebApplication.Controllers
                     .OrderBy(c => c.DisplayName)
                     .ToListAsync();
 
-                var difficulties = new[]
-                {
-                    new { Id = 1, Name = "Easy", DisplayName = "Легко" },
-                    new { Id = 2, Name = "Medium", DisplayName = "Средне" },
-                    new { Id = 3, Name = "Hard", DisplayName = "Сложно" }
-                };
-
                 return Ok(new
                 {
                     success = true,
-                    categories,
-                    difficulties
+                    categories
                 });
             }
             catch (Exception ex)
@@ -297,22 +283,16 @@ namespace WebApplication.Controllers
         private static int ResolveCategoryId(string? cuisine)
         {
             if (string.IsNullOrWhiteSpace(cuisine))
-            {
-                return 2;
-            }
+                return 1;
 
             var c = cuisine.ToLowerInvariant();
-            if (c.Contains("рус") || c.Contains("slav") || c.Contains("дом"))
-            {
-                return 1;
-            }
+            if (c.Contains("завт") || c.Contains("чай") || c.Contains("выпеч") || c.Contains("десерт"))
+                return 2;
 
-            if (c.Contains("ази") || c.Contains("asia") || c.Contains("thai") || c.Contains("кит") || c.Contains("япон"))
-            {
+            if (c.Contains("овощ") || c.Contains("пост") || c.Contains("вег") || c.Contains("без мяса"))
                 return 3;
-            }
 
-            return 2;
+            return 1;
         }
 
         private static async Task<string> SaveImageAsync(IFormFile file, string folderPath, string filePrefix)

@@ -102,10 +102,12 @@ public static class SiteContentSeed
             new SeedRecipe(6, "Овощной плов", "vegetable-plov", "Плотный рис с морковью, луком и специями без тяжёлого мясного блока.", "Азиатская", 2, 3, "plov.png", 60, new DateTime(2026, 3, 17, 0, 0, 0, DateTimeKind.Utc), 1501, 2501, new[] { "Рис — 350 г", "Морковь — 2 шт.", "Лук — 1 шт.", "Чеснок — 1 головка", "Зира — 1 ч. л.", "Растительное масло — 60 мл", "Соль — по вкусу" }, new[] { "Промойте рис, а морковь и лук нарежьте соломкой и полукольцами.", "Обжарьте лук и морковь в казане до мягкости.", "Добавьте специи, рис и влейте горячую воду на палец выше уровня крупы.", "Томите плов под крышкой до готовности риса, затем дайте ему отдохнуть 10 минут." })
         };
 
+        var seedIds = recipes.Select(r => r.Id).ToArray();
+
         var removable = dbContext.Recipes
             .Include(r => r.Ingredients)
             .Include(r => r.Steps)
-            .Where(r => r.Id <= 10 && recipes.All(seed => seed.Id != r.Id))
+            .Where(r => r.Id <= 10 && !seedIds.Contains(r.Id))
             .ToList();
 
         if (removable.Count > 0)

@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"]</title>
+    <meta name="description" content="Кулинариум: современный кулинарный сайт с рецептами, историями блюд и живой редакционной подачей." />
+    <link rel="stylesheet" href="~/css/site-redesign.css" asp-append-version="true" />
+</head>
+<body>
+    <div class="site-shell">
+        <header class="site-header">
+            <div class="shell-inner">
+                <a class="brand" asp-page="/Index">
+                    <span class="brand-mark">K</span>
+                    <span class="brand-copy">
+                        <strong>Кулинариум</strong>
+                        <span>рецепты, тексты и характер</span>
+                    </span>
+                </a>
+
+                <nav class="site-nav" aria-label="Основная навигация">
+                    <a asp-page="/Index">Главная</a>
+                    <a asp-page="/Catalog">Каталог</a>
+                    <a asp-page="/Favorites">Избранное</a>
+                    <a asp-page="/AddRecipe">Добавить рецепт</a>
+                    <a asp-page="/About">О проекте</a>
+                </nav>
+            </div>
+        </header>
+
+        <main class="page-frame">
+            @RenderBody()
+        </main>
+
+        <footer class="site-footer">
+            <div class="shell-inner site-footer-inner">
+                <div>
+                    <p class="footer-title">Кулинариум</p>
+                    <p class="footer-copy">Локальный проект с живой подачей, рецептами, новостями и авторскими сценариями.</p>
+                </div>
+                <div class="footer-links">
+                    <a asp-page="/Catalog">Каталог</a>
+                    <a asp-page="/AddRecipe">Добавить рецепт</a>
+                    <a asp-page="/About">О сайте</a>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

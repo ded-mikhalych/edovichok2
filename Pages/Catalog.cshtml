@@ -1,0 +1,76 @@
+@page "/catalog"
+@model WebApplication.Pages.CatalogModel
+@{
+    ViewData["Title"] = "Каталог | Кулинариум";
+}
+
+<section class="page-heading">
+    <p class="eyebrow">Каталог рецептов</p>
+    <h1>Поиск по блюдам, кухням, сложности и настроению.</h1>
+    <p class="page-intro">
+        Каталог уже не выглядит как просто список карточек: теперь это рабочая кулинарная витрина
+        с быстрыми сценариями выбора, фильтрами и более насыщенной подачей рецептов.
+    </p>
+</section>
+
+<section class="preset-strip" aria-label="Быстрые сценарии выбора">
+    <button type="button" class="preset-chip is-active" data-preset="all">Все рецепты</button>
+    <button type="button" class="preset-chip" data-preset="comfort">Уютная кухня</button>
+    <button type="button" class="preset-chip" data-preset="quick">Быстро и просто</button>
+    <button type="button" class="preset-chip" data-preset="weekend">На выходные</button>
+    <button type="button" class="preset-chip" data-preset="discover">Что-то новое</button>
+</section>
+
+<section class="catalog-shell">
+    <aside class="catalog-sidebar">
+        <div class="sidebar-card accent-card">
+            <p class="card-kicker">Новый сценарий</p>
+            <h2>Добавьте авторский рецепт</h2>
+            <p>С фотографиями, шагами и короткой историей блюда. Форма уже живет в новой структуре и тоже становится частью общего стиля.</p>
+            <a class="button button-primary" asp-page="/AddRecipe">Открыть форму</a>
+        </div>
+
+        <div class="sidebar-card">
+            <p class="card-kicker">Фильтры</p>
+            <div id="filtersContainer">
+                <label class="field-label" for="searchInput">Поиск</label>
+                <div class="search-wrapper">
+                    <input type="text" id="searchInput" placeholder="Введите название блюда..." />
+                    <ul id="suggestionsList"></ul>
+                </div>
+
+                <label class="field-label">Кухня</label>
+                <div id="categoriesContainer" class="filter-group"></div>
+
+                <label class="field-label">Сложность</label>
+                <div id="difficultiesContainer" class="filter-group"></div>
+
+                <div class="filter-actions">
+                    <button id="resetBtn" type="button" class="button button-secondary">Сбросить</button>
+                    <button id="applyBtn" type="button" class="button button-primary">Применить</button>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <section class="catalog-stage">
+        <div class="catalog-stage-header">
+            <div>
+                <p class="card-kicker">Живой список</p>
+                <h2>Выдача каталога</h2>
+            </div>
+            <div id="recipesCount" class="recipes-count"></div>
+        </div>
+
+        <div id="catalogSummary" class="catalog-summary">
+            Каталог собирает результаты по текущим фильтрам и быстрым сценариям.
+        </div>
+
+        <div id="cards" class="catalog-grid"></div>
+        <div id="pagination" class="catalog-pagination"></div>
+    </section>
+</section>
+
+@section Scripts {
+    <script src="~/js/catalog.js" asp-append-version="true"></script>
+}

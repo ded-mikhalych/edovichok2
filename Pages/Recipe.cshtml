@@ -1,0 +1,90 @@
+@page "/recipe/{slug}"
+@model WebApplication.Pages.RecipeModel
+@{
+    ViewData["Title"] = $"{Model.Recipe.Name} | Кулинариум";
+}
+
+<section class="page-heading compact-heading">
+    <p class="eyebrow">Рецепт</p>
+    <h1>@Model.Recipe.Name</h1>
+</section>
+
+<section class="recipe-intro-band">
+    <div class="recipe-stat-pills">
+        <span class="stat-pill">Сложность: @Model.Recipe.DifficultyText</span>
+        <span class="stat-pill">Кухня: @Model.Recipe.CuisineText</span>
+        <span class="stat-pill">Рейтинг: @Model.Recipe.RatingText</span>
+        <span class="stat-pill">Шагов: @Model.Recipe.Steps.Count</span>
+    </div>
+
+    <div class="recipe-actions-row">
+        <a class="button button-secondary" href="#ingredientsSection">К ингредиентам</a>
+        <a class="button button-secondary" href="#stepsSection">К шагам</a>
+        <button type="button" class="button button-secondary" id="copyRecipeLink">Скопировать ссылку</button>
+        <button type="button" class="button button-primary" id="printRecipe">Печать</button>
+    </div>
+</section>
+
+<section class="recipe-shell recipe-page">
+    <aside class="recipe-sidebar left-col">
+        <div class="recipe-cover">
+            <img src="@Model.Recipe.MainImageSrc" alt="@Model.Recipe.Name" />
+        </div>
+
+        <div class="recipe-meta-card">
+            <p class="card-kicker">О блюде</p>
+            <dl class="recipe-meta-list">
+                <div><dt>Автор</dt><dd>@Model.Recipe.AuthorText</dd></div>
+                <div><dt>Сложность</dt><dd>@Model.Recipe.DifficultyText</dd></div>
+                <div><dt>Кухня</dt><dd>@Model.Recipe.CuisineText</dd></div>
+                <div><dt>Рейтинг</dt><dd>@Model.Recipe.RatingText</dd></div>
+            </dl>
+        </div>
+    </aside>
+
+    <div class="recipe-main">
+        <article class="recipe-story">
+            <p class="lead-text">@Model.Recipe.Description</p>
+        </article>
+
+        <section class="recipe-card" id="ingredientsSection">
+            <div class="section-heading">
+                <p class="eyebrow">Ингредиенты</p>
+                <h2>База для приготовления</h2>
+            </div>
+            <div class="ingredients">
+                <ul class="ingredient-list">
+                    @foreach (var ingredient in Model.Recipe.Ingredients)
+                    {
+                        <li>@ingredient</li>
+                    }
+                </ul>
+            </div>
+        </section>
+
+        <section class="recipe-card" id="stepsSection">
+            <div class="section-heading">
+                <p class="eyebrow">Пошагово</p>
+                <h2>Как приготовить</h2>
+            </div>
+            <div class="steps timeline-steps">
+                @foreach (var step in Model.Recipe.Steps)
+                {
+                    <article class="step">
+                        <img src="@step.ImageSrc" alt="Шаг @step.StepNumber" />
+                        <div class="step-content">
+                            <h3>Шаг @step.StepNumber</h3>
+                            <p>@step.Description</p>
+                        </div>
+                    </article>
+                }
+            </div>
+        </section>
+    </div>
+</section>
+
+@section Scripts {
+    <script src="~/js/recipe-page.js" asp-append-version="true"></script>
+    <script src="~/js/step-modal.js" asp-append-version="true"></script>
+    <script src="~/js/scale-ingredients.js" asp-append-version="true"></script>
+}

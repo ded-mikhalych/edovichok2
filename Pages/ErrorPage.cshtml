@@ -1,0 +1,21 @@
+@page "/error"
+@model WebApplication.Pages.ErrorPageModel
+@{
+    ViewData["Title"] = "Ошибка | Кулинариум";
+}
+
+<section class="page-heading">
+    <p class="eyebrow">Системное сообщение</p>
+    <h1>Что-то пошло не так, и страницу не удалось показать.</h1>
+    <p class="page-intro">Это уже новая error-page в Razor Pages, без возврата к старому MVC layout.</p>
+</section>
+
+<section class="list-card">
+    @if (Model.ShowRequestId)
+    {
+        <p><strong>Request ID:</strong> <code>@Model.RequestId</code></p>
+    }
+
+    <p>Попробуйте обновить страницу или вернуться на главную. Если ошибка повторяется, это хороший кандидат для следующего технического прохода.</p>
+    <a class="button button-primary" asp-page="/Index">На главную</a>
+</section>

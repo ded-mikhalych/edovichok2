@@ -1,0 +1,99 @@
+@page "/"
+@model WebApplication.Pages.IndexModel
+@{
+    ViewData["Title"] = "Кулинариум";
+}
+
+<section class="hero">
+    <div class="hero-copy">
+        <p class="eyebrow">Редакционный кулинарный сайт</p>
+        <h1>Готовим не ради галочки, а ради атмосферы, вкуса и своих ритуалов.</h1>
+        <p class="hero-lead">
+            Здесь соседствуют домашние рецепты, кухонные истории, аккуратный каталог и место для собственных находок.
+            Проект остается практичным, но визуально и по тону уходит от учебного MVC-сайта к более живой авторской подаче.
+        </p>
+        <div class="hero-actions">
+            <a class="button button-primary" asp-page="/Catalog">Открыть каталог</a>
+            <a class="button button-secondary" asp-page="/AddRecipe">Добавить свой рецепт</a>
+        </div>
+    </div>
+
+    <aside class="hero-panel">
+        <p class="panel-title">Срез проекта</p>
+        <dl class="metrics-grid">
+            <div>
+                <dt>Рецептов</dt>
+                <dd>@Model.RecipeCount</dd>
+            </div>
+            <div>
+                <dt>Статей</dt>
+                <dd>@Model.ArticleCount</dd>
+            </div>
+            <div>
+                <dt>Категорий</dt>
+                <dd>@Model.CategoryCount</dd>
+            </div>
+        </dl>
+        <p class="panel-note">Сейчас мы уже читаем данные из базы и параллельно переводим публичную часть на Razor Pages.</p>
+    </aside>
+</section>
+
+<section class="content-section">
+    <div class="section-heading">
+        <p class="eyebrow">Свежие истории</p>
+        <h2>Новости и тексты, которые формируют настроение кухни</h2>
+    </div>
+    <div class="editorial-grid">
+        @foreach (var news in Model.Home.LatestNews)
+        {
+            <a class="editorial-card" asp-page="/Article" asp-route-id="@news.ArticleId">
+                <img src="@news.ImageSrc" alt="@news.Title" />
+                <div class="editorial-card-body">
+                    <p class="card-kicker">Статья</p>
+                    <h3>@news.Title</h3>
+                    <p>@news.Summary</p>
+                </div>
+            </a>
+        }
+    </div>
+</section>
+
+<section class="content-section split-section">
+    <div>
+        <div class="section-heading">
+            <p class="eyebrow">Новые рецепты</p>
+            <h2>Блюда, которые уже можно открыть, перечитать и повторить дома</h2>
+        </div>
+        <div class="recipe-teaser-grid">
+            @foreach (var recipe in Model.Home.NewestRecipes)
+            {
+                <a class="recipe-teaser" asp-page="@(recipe.ActionName == "Recipe" ? "/Recipe" : "/InDevelopment")" asp-route-slug="@recipe.Slug">
+                    <img src="@recipe.ImageSrc" alt="@recipe.Name" />
+                    <div>
+                        <p class="card-kicker">Рецепт</p>
+                        <h3>@recipe.Name</h3>
+                    </div>
+                </a>
+            }
+        </div>
+    </div>
+
+    <aside class="side-panel">
+        <div class="section-heading">
+            <p class="eyebrow">Куда пойти дальше</p>
+            <h2>Категории и маршруты</h2>
+        </div>
+        <div class="category-stack">
+            @foreach (var category in Model.Home.PopularCategories)
+            {
+                <a class="category-entry" asp-page="@(category.ActionName == "Soups" ? "/Soups" : "/InDevelopment")">
+                    <img src="~/images/@category.ImageFileName" alt="@category.DisplayName" />
+                    <div>
+                        <h3>@category.DisplayName</h3>
+                        <p>@category.RecipeCount рецептов в подборке</p>
+                    </div>
+                </a>
+            }
+        </div>
+    </aside>
+</section>

@@ -1,0 +1,26 @@
+@page "/article/{id:int}"
+@model WebApplication.Pages.ArticleModel
+@{
+    ViewData["Title"] = $"{Model.Article.Title} | Кулинариум";
+}
+
+<article class="article-shell">
+    <header class="page-heading compact-heading">
+        <p class="eyebrow">Редакционный материал</p>
+        <h1>@Model.Article.Title</h1>
+        <p class="page-intro">@Model.Article.Summary</p>
+    </header>
+
+    <img class="article-hero-image" src="@Model.Article.ImageSrc" alt="@Model.Article.Title" />
+
+    <section class="article-body prose">
+        @if (!string.IsNullOrWhiteSpace(Model.Article.ContentHtml))
+        {
+            @Html.Raw(Model.Article.ContentHtml)
+        }
+        else
+        {
+            <p>@Model.Article.Summary</p>
+        }
+    </section>
+</article>

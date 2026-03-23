@@ -1,4 +1,5 @@
 const PAGE_SIZE = 8;
+const RATED_KEY = 'rated_recipe_';
 
 const state = {
     selectedCategories: [],
@@ -8,12 +9,44 @@ const state = {
     totalPages: 1
 };
 
-const RATED_KEY = 'rated_recipe_';
+const presetConfigs = {
+    all: {
+        query: '',
+        categories: [],
+        difficulties: [],
+        summary: 'Показываем весь каталог без дополнительных ограничений.'
+    },
+    comfort: {
+        query: '',
+        categories: ['Russian'],
+        difficulties: [1, 2],
+        summary: 'Домашние и более спокойные рецепты для повседневной кухни.'
+    },
+    quick: {
+        query: '',
+        categories: [],
+        difficulties: [1],
+        summary: 'Сейчас в фокусе самые простые сценарии приготовления.'
+    },
+    weekend: {
+        query: '',
+        categories: [],
+        difficulties: [2, 3],
+        summary: 'Более насыщенные рецепты, на которые хочется выделить время.'
+    },
+    discover: {
+        query: 'сал',
+        categories: ['European', 'Asian'],
+        difficulties: [],
+        summary: 'Небольшой сдвиг в сторону менее привычных или более свежих сочетаний.'
+    }
+};
 
 document.addEventListener('DOMContentLoaded', async () => {
     await loadFilters();
-    await loadRecipes();
     setupEventListeners();
+    updateCatalogSummary(presetConfigs.all.summary);
+    await loadRecipes();
 });
 
 async function loadFilters() {
@@ -32,14 +65,21 @@ async function loadFilters() {
 function renderCategories(categories) {
     const container = document.getElementById('categoriesContainer');
     container.innerHTML = '';
+
     categories.forEach(category => {
-        const label = document.createElement('p');
+        const label = document.createElement('label');
+        label.className = 'filter-option';
+
         const input = document.createElement('input');
         input.type = 'checkbox';
         input.value = category.name;
         input.className = 'category-filter';
+
+        const text = document.createElement('span');
+        text.textContent = category.displayName;
+
         label.appendChild(input);
-        label.appendChild(document.createTextNode(' ' + category.displayName));
+        label.appendChild(text);
         container.appendChild(label);
     });
 }
@@ -47,14 +87,21 @@ function renderCategories(categories) {
 function renderDifficulties(difficulties) {
     const container = document.getElementById('difficultiesContainer');
     container.innerHTML = '';
+
     difficulties.forEach(diff => {
-        const label = document.createElement('p');
+        const label = document.createElement('label');
+        label.className = 'filter-option';
+
         const input = document.createElement('input');
         input.type = 'checkbox';
         input.value = diff.id;
         input.className = 'difficulty-filter';
+
+        const text = document.createElement('span');
+        text.textContent = diff.displayName;
+
         label.appendChild(input);
-        label.appendChild(document.createTextNode(' ' + diff.displayName));
+        label.appendChild(text);
         container.appendChild(label);
     });
 }
@@ -63,18 +110,21 @@ function setupEventListeners() {
     const searchInput = document.getElementById('searchInput');
     let searchTimeout;
 
-    searchInput.addEventListener('input', (e) => {
-        const query = e.target.value.trim();
+    searchInput.addEventListener('input', event => {
+        const query = event.target.value.trim();
         clearTimeout(searchTimeout);
+
         if (query.length > 0) {
             getSearchSuggestions(query);
             searchTimeout = setTimeout(() => {
                 state.searchQuery = query;
                 state.currentPage = 1;
+                activatePreset(null);
+                updateCatalogSummary('Поиск работает поверх текущих фильтров и показывает более точечную выдачу.');
                 loadRecipes();
             }, 300);
         } else {
-            document.getElementById('suggestionsList').style.display = 'none';
+            hideSuggestions();
             state.searchQuery = '';
             state.currentPage = 1;
             loadRecipes();
@@ -84,29 +134,84 @@ function setupEventListeners() {
     document.getElementById('applyBtn').addEventListener('click', () => {
         updateSelectedFilters();
         state.currentPage = 1;
+        activatePreset(null);
+        updateCatalogSummary('Показываем результаты по вручную собранным фильтрам.');
         loadRecipes();
     });
 
     document.getElementById('resetBtn').addEventListener('click', () => {
-        document.querySelectorAll('.category-filter, .difficulty-filter').forEach(el => el.checked = false);
-        document.getElementById('searchInput').value = '';
-        state.searchQuery = '';
-        state.selectedCategories = [];
-        state.selectedDifficulties = [];
-        state.currentPage = 1;
-        document.getElementById('suggestionsList').style.display = 'none';
+        resetFilters();
+        activatePreset('all');
+        updateCatalogSummary(presetConfigs.all.summary);
         loadRecipes();
     });
+
+    document.querySelectorAll('.preset-chip').forEach(chip => {
+        chip.addEventListener('click', () => {
+            applyPreset(chip.dataset.preset || 'all');
+        });
+    });
+}
+
+function resetFilters() {
+    document.querySelectorAll('.category-filter, .difficulty-filter').forEach(el => {
+        el.checked = false;
+    });
+
+    document.getElementById('searchInput').value = '';
+    state.searchQuery = '';
+    state.selectedCategories = [];
+    state.selectedDifficulties = [];
+    state.currentPage = 1;
+    hideSuggestions();
+}
+
+function applyPreset(presetName) {
+    const preset = presetConfigs[presetName] || presetConfigs.all;
+
+    state.searchQuery = preset.query;
+    state.selectedCategories = [...preset.categories];
+    state.selectedDifficulties = [...preset.difficulties];
+    state.currentPage = 1;
+
+    document.getElementById('searchInput').value = preset.query;
+
+    document.querySelectorAll('.category-filter').forEach(input => {
+        input.checked = state.selectedCategories.includes(input.value);
+    });
+
+    document.querySelectorAll('.difficulty-filter').forEach(input => {
+        input.checked = state.selectedDifficulties.includes(Number.parseInt(input.value, 10));
+    });
+
+    activatePreset(presetName);
+    updateCatalogSummary(preset.summary);
+    hideSuggestions();
+    loadRecipes();
+}
+
+function activatePreset(presetName) {
+    document.querySelectorAll('.preset-chip').forEach(chip => {
+        chip.classList.toggle('is-active', presetName !== null && chip.dataset.preset === presetName);
+    });
+}
+
+function updateCatalogSummary(text) {
+    const summary = document.getElementById('catalogSummary');
+    if (summary) {
+        summary.textContent = text;
+    }
 }
 
 async function getSearchSuggestions(query) {
     try {
         const response = await fetch(`/api/recipe/suggestions?query=${encodeURIComponent(query)}`);
         const result = await response.json();
+
         if (result.success && result.data.length > 0) {
             renderSuggestions(result.data);
         } else {
-            document.getElementById('suggestionsList').style.display = 'none';
+            hideSuggestions();
         }
     } catch (error) {
         console.error('Error fetching suggestions:', error);
@@ -116,32 +221,40 @@ async function getSearchSuggestions(query) {
 function renderSuggestions(suggestions) {
     const list = document.getElementById('suggestionsList');
     list.innerHTML = '';
+
     suggestions.forEach(suggestion => {
-        const li = document.createElement('li');
-        li.style.cssText = 'padding: 8px; cursor: pointer; border-bottom: 1px solid #eee;';
-        li.textContent = suggestion.name + (suggestion.type === 'category' ? ' (категория)' : '');
-        li.addEventListener('mouseover', () => li.style.backgroundColor = '#f0f0f0');
-        li.addEventListener('mouseout', () => li.style.backgroundColor = 'transparent');
-        li.addEventListener('click', () => {
+        const item = document.createElement('li');
+        item.className = 'suggestion-item';
+        item.textContent = suggestion.name + (suggestion.type === 'category' ? ' (категория)' : '');
+        item.addEventListener('click', () => {
             document.getElementById('searchInput').value = suggestion.name;
             state.searchQuery = suggestion.name;
             state.currentPage = 1;
-            list.style.display = 'none';
+            hideSuggestions();
             loadRecipes();
         });
-        list.appendChild(li);
+        list.appendChild(item);
     });
+
     list.style.display = 'block';
+}
+
+function hideSuggestions() {
+    const list = document.getElementById('suggestionsList');
+    if (list) {
+        list.style.display = 'none';
+    }
 }
 
 function updateSelectedFilters() {
     state.selectedCategories = Array.from(document.querySelectorAll('.category-filter:checked')).map(el => el.value);
-    state.selectedDifficulties = Array.from(document.querySelectorAll('.difficulty-filter:checked')).map(el => parseInt(el.value));
+    state.selectedDifficulties = Array.from(document.querySelectorAll('.difficulty-filter:checked')).map(el => Number.parseInt(el.value, 10));
 }
 
 async function loadRecipes() {
     try {
         updateSelectedFilters();
+
         const params = new URLSearchParams();
         if (state.searchQuery) params.append('query', state.searchQuery);
         state.selectedCategories.forEach(cat => params.append('categories', cat));
@@ -160,7 +273,7 @@ async function loadRecipes() {
         }
     } catch (error) {
         console.error('Error loading recipes:', error);
-        document.getElementById('cards').innerHTML = '<p style="color: red;">Ошибка при загрузке рецептов</p>';
+        document.getElementById('cards').innerHTML = '<article class="catalog-empty"><p class="card-kicker">Ошибка</p><h3>Не удалось загрузить рецепты.</h3><p>Попробуйте обновить страницу немного позже.</p></article>';
     }
 }
 
@@ -170,13 +283,14 @@ function buildStars(avg, count) {
     for (let i = 1; i <= 5; i++) {
         stars += `<span class="${i <= rounded ? 'filled' : ''}" data-val="${i}">★</span>`;
     }
+
     const countText = count > 0 ? `${avg.toFixed(1)} (${count} оц.)` : 'нет оценок';
     return { stars, countText };
 }
 
 function getRecipeUrl(recipe) {
     if (!recipe.slug) return null;
-    return `/home/recipe/${encodeURIComponent(recipe.slug)}`;
+    return `/recipe/${encodeURIComponent(recipe.slug)}`;
 }
 
 function renderRecipes(recipes) {
@@ -184,7 +298,7 @@ function renderRecipes(recipes) {
     container.innerHTML = '';
 
     if (recipes.length === 0) {
-        container.innerHTML = '<p style="color: #666;">По вашему запросу ничего не найдено</p>';
+        container.innerHTML = '<article class="catalog-empty"><p class="card-kicker">Пустой результат</p><h3>По этому сценарию пока ничего не найдено.</h3><p>Попробуйте снять часть фильтров или выбрать другой быстрый режим сверху.</p></article>';
         return;
     }
 
@@ -194,7 +308,9 @@ function renderRecipes(recipes) {
 
         const card = document.createElement('article');
         card.className = 'recipe-card-wrapper';
-        card.style.cssText = recipeUrl ? 'cursor:pointer;' : '';
+        if (recipeUrl) {
+            card.style.cursor = 'pointer';
+        }
 
         const preview = document.createElement('div');
         preview.className = 'recipe-preview';
@@ -202,37 +318,47 @@ function renderRecipes(recipes) {
         const info = document.createElement('div');
         info.className = 'recipe-info';
 
-        const img = document.createElement('img');
-        img.src = recipe.imageFileName.startsWith('https://') ? recipe.imageFileName : `/images/${recipe.imageFileName}`;
-        img.alt = recipe.name;
-        img.style.cssText = 'display:block;';
+        const image = document.createElement('img');
+        image.src = recipe.imageFileName && recipe.imageFileName.startsWith('https://')
+            ? recipe.imageFileName
+            : `/images/${recipe.imageFileName}`;
+        image.alt = recipe.name;
+
+        const kicker = document.createElement('p');
+        kicker.className = 'card-kicker';
+        kicker.textContent = recipe.category || 'Рецепт';
 
         const title = document.createElement('h4');
         title.textContent = recipe.name;
-        title.style.cssText = 'margin:6px 0;';
-
-        const infoTitle = document.createElement('h4');
-        infoTitle.textContent = recipe.name;
-        infoTitle.style.cssText = 'margin:2px 0 8px;';
 
         const description = document.createElement('p');
         description.className = 'recipe-description';
         description.textContent = recipe.description;
 
-        const infoDescription = document.createElement('p');
-        infoDescription.className = 'recipe-description';
-        infoDescription.textContent = recipe.description;
+        const infoTitle = document.createElement('h4');
+        infoTitle.textContent = recipe.name;
+
+        const badges = document.createElement('div');
+        badges.className = 'catalog-badges';
+        badges.innerHTML = `
+            <span>${getDifficultyText(recipe.difficulty)}</span>
+            <span>${recipe.cookingTime} мин</span>
+        `;
 
         const meta = document.createElement('p');
         meta.className = 'meta';
         meta.innerHTML = `
-            <strong>Кухня:</strong> ${recipe.category}<br>
+            <strong>Кухня:</strong> ${recipe.category || 'Не указана'}<br>
             <strong>Сложность:</strong> ${getDifficultyText(recipe.difficulty)}<br>
             <strong>Время:</strong> ${recipe.cookingTime} мин
         `;
 
+        const infoDescription = document.createElement('p');
+        infoDescription.className = 'recipe-description';
+        infoDescription.textContent = recipe.description;
+
         const ratingBlock = document.createElement('div');
-        ratingBlock.style.cssText = 'margin-top:auto;';
+        ratingBlock.className = 'rating-block';
 
         const { stars, countText } = buildStars(recipe.averageRating, recipe.ratingCount);
 
@@ -253,60 +379,71 @@ function renderRecipes(recipes) {
         ratingBlock.appendChild(starRow);
         ratingBlock.appendChild(avgLabel);
         ratingBlock.appendChild(ratedLabel);
+
         const starSpans = starRow.querySelectorAll('span');
-        starSpans.forEach((star, idx) => {
+        starSpans.forEach((star, index) => {
             star.addEventListener('mouseenter', () => {
                 if (alreadyRated) return;
-                starSpans.forEach((s, i) => {
-                    s.classList.toggle('hovered', i <= idx);
-                    s.classList.remove('filled');
+                starSpans.forEach((item, itemIndex) => {
+                    item.classList.toggle('hovered', itemIndex <= index);
+                    item.classList.remove('filled');
                 });
             });
+
             star.addEventListener('mouseleave', () => {
                 if (alreadyRated) return;
                 const currentAvg = Math.round(parseFloat(avgLabel.dataset.avg || '0'));
-                starSpans.forEach((s, i) => {
-                    s.classList.remove('hovered');
-                    s.classList.toggle('filled', i < currentAvg);
+                starSpans.forEach((item, itemIndex) => {
+                    item.classList.remove('hovered');
+                    item.classList.toggle('filled', itemIndex < currentAvg);
                 });
             });
-            star.addEventListener('click', async (e) => {
-                e.stopPropagation();
+
+            star.addEventListener('click', async event => {
+                event.stopPropagation();
                 if (alreadyRated) return;
-                const rating = idx + 1;
+
+                const rating = index + 1;
                 try {
-                    const resp = await fetch(`/api/recipe/${recipe.id}/rate`, {
+                    const response = await fetch(`/api/recipe/${recipe.id}/rate`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ rating })
                     });
-                    const res = await resp.json();
-                    if (res.success) {
+
+                    const result = await response.json();
+                    if (result.success) {
                         localStorage.setItem(RATED_KEY + recipe.id, '1');
-                        avgLabel.dataset.avg = res.averageRating;
-                        avgLabel.textContent = `${res.averageRating} (${res.ratingCount} оц.)`;
-                        const newRounded = Math.round(res.averageRating);
-                        starSpans.forEach((s, i) => {
-                            s.classList.remove('hovered');
-                            s.classList.toggle('filled', i < newRounded);
+                        avgLabel.dataset.avg = result.averageRating;
+                        avgLabel.textContent = `${result.averageRating} (${result.ratingCount} оц.)`;
+
+                        const rounded = Math.round(result.averageRating);
+                        starSpans.forEach((item, itemIndex) => {
+                            item.classList.remove('hovered');
+                            item.classList.toggle('filled', itemIndex < rounded);
                         });
+
                         ratedLabel.textContent = 'Вы уже оценили';
                     }
-                } catch (err) {
-                    console.error('Rating error:', err);
+                } catch (error) {
+                    console.error('Rating error:', error);
                 }
             });
         });
 
         avgLabel.dataset.avg = recipe.averageRating;
         const initialRounded = Math.round(recipe.averageRating);
-        starSpans.forEach((s, i) => s.classList.toggle('filled', i < initialRounded));
+        starSpans.forEach((item, index) => {
+            item.classList.toggle('filled', index < initialRounded);
+        });
 
-        preview.appendChild(img);
+        preview.appendChild(image);
+        preview.appendChild(kicker);
         preview.appendChild(title);
         preview.appendChild(description);
 
         info.appendChild(infoTitle);
+        info.appendChild(badges);
         info.appendChild(meta);
         info.appendChild(infoDescription);
         info.appendChild(ratingBlock);
@@ -325,7 +462,12 @@ function renderRecipes(recipes) {
 }
 
 function getDifficultyText(difficulty) {
-    const map = { 1: 'Лёгкое', 2: 'Среднее', 3: 'Сложное' };
+    const map = {
+        1: 'Легко',
+        2: 'Средне',
+        3: 'Сложно'
+    };
+
     return map[difficulty] || 'Неизвестно';
 }
 
@@ -339,22 +481,22 @@ function renderPagination(currentPage, totalPages) {
 
     if (totalPages <= 1) return;
 
-    for (let i = 1; i <= totalPages; i++) {
-        const btn = document.createElement('button');
-        btn.className = 'page-btn' + (i === currentPage ? ' active' : '');
-        btn.textContent = i;
-        btn.addEventListener('click', () => {
-            if (i !== state.currentPage) {
-                state.currentPage = i;
+    for (let page = 1; page <= totalPages; page++) {
+        const button = document.createElement('button');
+        button.className = 'page-btn' + (page === currentPage ? ' active' : '');
+        button.textContent = page;
+        button.addEventListener('click', () => {
+            if (page !== state.currentPage) {
+                state.currentPage = page;
                 loadRecipes();
             }
         });
-        container.appendChild(btn);
+        container.appendChild(button);
     }
 }
 
-document.addEventListener('click', (e) => {
-    if (!e.target.matches('#searchInput')) {
-        document.getElementById('suggestionsList').style.display = 'none';
+document.addEventListener('click', event => {
+    if (!event.target.matches('#searchInput')) {
+        hideSuggestions();
     }
 });

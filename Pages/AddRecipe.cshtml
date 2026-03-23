@@ -1,0 +1,92 @@
+@page "/add-recipe"
+@model WebApplication.Pages.AddRecipeModel
+@{
+    ViewData["Title"] = "Добавить рецепт | Кулинариум";
+}
+
+<section class="page-heading">
+    <p class="eyebrow">Пользовательский рецепт</p>
+    <h1>Покажи свое блюдо так, будто это полноценный материал на сайте.</h1>
+    <p class="page-intro">Форма по-прежнему поддерживает шаги, изображения и интерактивную отправку, но теперь встроена в новый визуальный язык проекта.</p>
+</section>
+
+<section class="form-shell">
+    <form id="recipeForm" class="recipe-form-card">
+        <div class="field">
+            <label for="title">Название</label>
+            <input type="text" name="title" id="title" required />
+            <div class="error-msg"></div>
+        </div>
+
+        <div class="field">
+            <label for="description">Описание</label>
+            <textarea name="description" id="description" maxlength="250" required></textarea>
+            <div class="char-counter"><span id="descCount">0</span>/250</div>
+            <div class="error-msg"></div>
+        </div>
+
+        <div class="form-grid">
+            <div class="field">
+                <label for="author">Автор</label>
+                <input type="text" name="author" id="author" required />
+                <div class="error-msg"></div>
+            </div>
+
+            <div class="field">
+                <label for="cuisine">Кухня</label>
+                <input type="text" name="cuisine" id="cuisine" />
+                <div class="error-msg"></div>
+            </div>
+        </div>
+
+        <div class="form-grid">
+            <div class="field">
+                <label for="difficulty">Сложность</label>
+                <select name="difficulty" id="difficulty" required>
+                    <option value="">Выберите...</option>
+                    <option value="easy">Легко</option>
+                    <option value="medium">Средне</option>
+                    <option value="hard">Сложно</option>
+                </select>
+                <div class="error-msg"></div>
+            </div>
+
+            <div class="field">
+                <label for="recipeImage">Изображение блюда</label>
+                <input type="file" name="image" id="recipeImage" accept="image/*" />
+                <div class="error-msg"></div>
+            </div>
+        </div>
+
+        <div class="builder-section">
+            <div class="builder-header">
+                <div>
+                    <p class="card-kicker">Конструктор</p>
+                    <h2>Ингредиенты</h2>
+                </div>
+                <button type="button" id="addIngredient" class="button button-secondary">Добавить ингредиент</button>
+            </div>
+            <div id="ingredients"></div>
+        </div>
+
+        <div class="builder-section">
+            <div class="builder-header">
+                <div>
+                    <p class="card-kicker">Конструктор</p>
+                    <h2>Шаги приготовления</h2>
+                </div>
+                <button type="button" id="addStep" class="button button-secondary">Добавить шаг</button>
+            </div>
+            <p class="builder-note">Перетаскивайте шаги мышкой, чтобы менять порядок, и при необходимости редактируйте изображения перед загрузкой.</p>
+            <div id="steps"></div>
+        </div>
+
+        <input type="submit" value="Сохранить рецепт" />
+    </form>
+</section>
+
+@section Scripts {
+    <script src="~/js/image-editor.js" asp-append-version="true"></script>
+    <script src="~/js/add-recipe.js" asp-append-version="true"></script>
+    <script src="~/js/validate-form.js" asp-append-version="true"></script>
+}

@@ -1,0 +1,24 @@
+@page "/soups"
+@model WebApplication.Pages.SoupsModel
+@{
+    ViewData["Title"] = "Супы | Кулинариум";
+}
+
+<section class="page-heading">
+    <p class="eyebrow">Подборка</p>
+    <h1>Супы и плотные первые блюда, на которых держится домашняя кухня.</h1>
+    <p class="page-intro">Раздел пока собран по текущим данным категории, но уже подан как отдельная тематическая страница.</p>
+</section>
+
+<section class="list-card">
+    <ul class="link-list">
+        @foreach (var recipe in Model.Recipes)
+        {
+            <li>
+                <a asp-page="@(recipe.ActionName == "Recipe" ? "/Recipe" : "/InDevelopment")" asp-route-slug="@recipe.Slug">
+                    @recipe.Name
+                </a>
+            </li>
+        }
+    </ul>
+</section>

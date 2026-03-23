@@ -142,14 +142,16 @@ namespace WebApplication.Controllers
                 {
                     query = query.ToLower().Trim();
                     recipesQuery = recipesQuery.Where(r =>
-                        r.Name.ToLower().Contains(query) ||
-                        r.Description.ToLower().Contains(query));
+                        (r.Name ?? string.Empty).ToLower().Contains(query) ||
+                        (r.Description ?? string.Empty).ToLower().Contains(query));
                 }
 
                 // Category filter
                 if (categories != null && categories.Length > 0)
                 {
                     recipesQuery = recipesQuery.Where(r =>
+                        r.Category != null &&
+                        r.Category.Name != null &&
                         categories.Contains(r.Category.Name));
                 }
 
@@ -176,7 +178,10 @@ namespace WebApplication.Controllers
                         r.Difficulty,
                         r.ImageFileName,
                         r.CookingTime,
-                        Category = r.Category.DisplayName
+                        Category = r.Category != null ? r.Category.DisplayName : null,
+                        r.RatingSum,
+                        r.RatingCount,
+                        AverageRating = r.RatingCount > 0 ? (double)r.RatingSum / r.RatingCount : 0.0
                     })
                     .ToListAsync();
 
@@ -214,8 +219,8 @@ namespace WebApplication.Controllers
 
                 var suggestions = await _context.Recipes
                     .Where(r =>
-                        r.Name.ToLower().Contains(query) ||
-                        r.Description.ToLower().Contains(query))
+                        (r.Name ?? string.Empty).ToLower().Contains(query) ||
+                        (r.Description ?? string.Empty).ToLower().Contains(query))
                     .OrderBy(r => r.Name)
                     .Take(10)
                     .Select(r => new
@@ -228,8 +233,8 @@ namespace WebApplication.Controllers
 
                 // Also add category suggestions
                 var categorySuggestions = await _context.Categories
-                    .Where(c => c.Name.ToLower().Contains(query) ||
-                               c.DisplayName.ToLower().Contains(query))
+                    .Where(c => (c.Name ?? string.Empty).ToLower().Contains(query) ||
+                               (c.DisplayName ?? string.Empty).ToLower().Contains(query))
                     .OrderBy(c => c.DisplayName)
                     .Take(5)
                     .Select(c => new
@@ -275,6 +280,36 @@ namespace WebApplication.Controllers
                     success = true,
                     categories = categories,
                     difficulties = difficulties
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpPost("{id}/rate")]
+        public async Task<IActionResult> RateRecipe(int id, [FromBody] RateRequest request)
+        {
+            try
+            {
+                if (request.Rating < 1 || request.Rating > 5)
+                    return BadRequest(new { success = false, message = "Оценка должна быть от 1 до 5" });
+
+                var recipe = await _context.Recipes.FindAsync(id);
+                if (recipe == null)
+                    return NotFound(new { success = false, message = "Рецепт не найден" });
+
+                recipe.RatingSum += request.Rating;
+                recipe.RatingCount++;
+                await _context.SaveChangesAsync();
+
+                double averageRating = (double)recipe.RatingSum / recipe.RatingCount;
+                return Ok(new
+                {
+                    success = true,
+                    averageRating = Math.Round(averageRating, 1),
+                    ratingCount = recipe.RatingCount
                 });
             }
             catch (Exception ex)

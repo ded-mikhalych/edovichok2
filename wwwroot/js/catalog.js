@@ -2,6 +2,7 @@ const PAGE_SIZE = 6;
 
 const state = {
     selectedCategories: [],
+    selectedIngredients: [],
     searchQuery: '',
     currentPage: 1
 };
@@ -10,27 +11,32 @@ const presetConfigs = {
     all: {
         query: '',
         categories: [],
+        ingredients: [],
         summary: 'Показываем весь каталог без дополнительных ограничений.'
     },
-    everyday: {
+    firstCourse: {
         query: '',
-        categories: ['everyday'],
-        summary: 'Подборка для обычных дней: понятные блюда, к которым легко возвращаться.'
+        categories: ['first-course'],
+        ingredients: [],
+        summary: 'Подборка первых блюд: супы, бульоны и другие варианты для основательного начала обеда.'
     },
-    teaBreak: {
+    secondCourse: {
         query: '',
-        categories: ['tea-break'],
-        summary: 'Здесь собраны рецепты для спокойного завтрака и домашнего чаепития.'
+        categories: ['second-course'],
+        ingredients: [],
+        summary: 'Здесь собраны вторые блюда, которые можно поставить в центр обычного домашнего ужина.'
     },
-    meatless: {
+    pastry: {
         query: '',
-        categories: ['meatless'],
-        summary: 'Рецепты без мясного акцента, где основную работу делают овощи, крупы и сыр.'
+        categories: ['pastry'],
+        ingredients: [],
+        summary: 'Раздел с выпечкой: пироги, запеканки и другие рецепты для духовки.'
     },
-    quickDinner: {
+    drinks: {
         query: '',
-        categories: ['everyday', 'meatless'],
-        summary: 'Небольшая подборка для быстрого ужина без сложных сценариев и лишних продуктов.'
+        categories: ['drinks'],
+        ingredients: [],
+        summary: 'Здесь будут напитки: домашние, простые и рассчитанные на понятные ингредиенты.'
     }
 };
 
@@ -49,7 +55,8 @@ async function loadFilters() {
             return;
         }
 
-        renderCategories(result.categories);
+        renderCategories(result.categories || []);
+        renderIngredients(result.ingredients || []);
     } catch (error) {
         console.error('Error loading filters:', error);
     }
@@ -77,6 +84,28 @@ function renderCategories(categories) {
     });
 }
 
+function renderIngredients(ingredients) {
+    const container = document.getElementById('ingredientsContainer');
+    container.innerHTML = '';
+
+    ingredients.forEach(ingredient => {
+        const label = document.createElement('label');
+        label.className = 'filter-option';
+
+        const input = document.createElement('input');
+        input.type = 'checkbox';
+        input.value = ingredient.name;
+        input.className = 'ingredient-filter';
+
+        const text = document.createElement('span');
+        text.textContent = ingredient.name;
+
+        label.appendChild(input);
+        label.appendChild(text);
+        container.appendChild(label);
+    });
+}
+
 function setupEventListeners() {
     const searchInput = document.getElementById('searchInput');
     let searchTimeout;
@@ -91,7 +120,7 @@ function setupEventListeners() {
                 state.searchQuery = query;
                 state.currentPage = 1;
                 activatePreset(null);
-                updateCatalogSummary('Поиск работает поверх текущих фильтров и показывает более точечную выдачу.');
+                updateCatalogSummary('Поиск работает поверх выбранного типа блюда и ингредиентов.');
                 loadRecipes();
             }, 250);
         } else {
@@ -106,7 +135,7 @@ function setupEventListeners() {
         updateSelectedFilters();
         state.currentPage = 1;
         activatePreset(null);
-        updateCatalogSummary('Показываем результаты по вручную собранным фильтрам.');
+        updateCatalogSummary('Показываем результаты по выбранному типу блюда и отмеченным ингредиентам.');
         loadRecipes();
     });
 
@@ -123,13 +152,14 @@ function setupEventListeners() {
 }
 
 function resetFilters() {
-    document.querySelectorAll('.category-filter').forEach(el => {
+    document.querySelectorAll('.category-filter, .ingredient-filter').forEach(el => {
         el.checked = false;
     });
 
     document.getElementById('searchInput').value = '';
     state.searchQuery = '';
     state.selectedCategories = [];
+    state.selectedIngredients = [];
     state.currentPage = 1;
     hideSuggestions();
 }
@@ -139,12 +169,17 @@ function applyPreset(presetName) {
 
     state.searchQuery = preset.query;
     state.selectedCategories = [...preset.categories];
+    state.selectedIngredients = [...preset.ingredients];
     state.currentPage = 1;
 
     document.getElementById('searchInput').value = preset.query;
 
     document.querySelectorAll('.category-filter').forEach(input => {
         input.checked = state.selectedCategories.includes(input.value);
+    });
+
+    document.querySelectorAll('.ingredient-filter').forEach(input => {
+        input.checked = state.selectedIngredients.includes(input.value);
     });
 
     activatePreset(presetName);
@@ -185,10 +220,16 @@ function renderSuggestions(suggestions) {
     const list = document.getElementById('suggestionsList');
     list.innerHTML = '';
 
+    const typeLabels = {
+        category: 'тип блюда',
+        ingredient: 'ингредиент',
+        recipe: 'рецепт'
+    };
+
     suggestions.forEach(suggestion => {
         const item = document.createElement('li');
         item.className = 'suggestion-item';
-        item.textContent = suggestion.name + (suggestion.type === 'category' ? ' (категория)' : '');
+        item.textContent = `${suggestion.name} (${typeLabels[suggestion.type] || 'совпадение'})`;
         item.addEventListener('click', () => {
             document.getElementById('searchInput').value = suggestion.name;
             state.searchQuery = suggestion.name;
@@ -211,6 +252,7 @@ function hideSuggestions() {
 
 function updateSelectedFilters() {
     state.selectedCategories = Array.from(document.querySelectorAll('.category-filter:checked')).map(el => el.value);
+    state.selectedIngredients = Array.from(document.querySelectorAll('.ingredient-filter:checked')).map(el => el.value);
 }
 
 async function loadRecipes() {
@@ -220,6 +262,7 @@ async function loadRecipes() {
         const params = new URLSearchParams();
         if (state.searchQuery) params.append('query', state.searchQuery);
         state.selectedCategories.forEach(cat => params.append('categories', cat));
+        state.selectedIngredients.forEach(ingredient => params.append('ingredients', ingredient));
         params.append('page', state.currentPage);
         params.append('pageSize', PAGE_SIZE);
 
@@ -247,7 +290,7 @@ function renderRecipes(recipes) {
     container.innerHTML = '';
 
     if (recipes.length === 0) {
-        container.innerHTML = '<article class="catalog-empty"><p class="card-kicker">Пустой результат</p><h3>По этому сценарию пока ничего не найдено.</h3><p>Попробуйте снять часть фильтров или выбрать другой быстрый режим сверху.</p></article>';
+        container.innerHTML = '<article class="catalog-empty"><p class="card-kicker">Пустой результат</p><h3>По этому сочетанию фильтров пока ничего не найдено.</h3><p>Попробуйте снять часть ограничений или выбрать другой ингредиент.</p></article>';
         return;
     }
 
@@ -288,14 +331,14 @@ function renderRecipes(recipes) {
         const badges = document.createElement('div');
         badges.className = 'catalog-badges';
         badges.innerHTML = `
-            <span>${recipe.category || 'Подборка не указана'}</span>
+            <span>${recipe.category || 'Тип не указан'}</span>
             <span>${recipe.cookingTime} мин</span>
         `;
 
         const meta = document.createElement('p');
         meta.className = 'meta';
         meta.innerHTML = `
-            <strong>Подборка:</strong> ${recipe.category || 'Не указана'}<br>
+            <strong>Тип блюда:</strong> ${recipe.category || 'Не указан'}<br>
             <strong>Время:</strong> ${recipe.cookingTime} мин
         `;
 

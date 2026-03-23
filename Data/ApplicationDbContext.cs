@@ -23,9 +23,10 @@ namespace WebApplication.Data
             // Categories seed data
             var categories = new Category[]
             {
-                new Category { Id = 1, Name = "everyday", DisplayName = "На каждый день" },
-                new Category { Id = 2, Name = "tea-break", DisplayName = "К чаю и завтраку" },
-                new Category { Id = 3, Name = "meatless", DisplayName = "Без мяса" }
+                new Category { Id = 1, Name = "first-course", DisplayName = "Первое" },
+                new Category { Id = 2, Name = "second-course", DisplayName = "Второе" },
+                new Category { Id = 3, Name = "pastry", DisplayName = "Выпечка" },
+                new Category { Id = 4, Name = "drinks", DisplayName = "Напитки" }
             };
 
             modelBuilder.Entity<Category>().HasData(categories);

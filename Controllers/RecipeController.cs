@@ -115,6 +115,7 @@ namespace WebApplication.Controllers
         public async Task<IActionResult> Search(
             [FromQuery] string query = "",
             [FromQuery] string[]? categories = null,
+            [FromQuery] string[]? ingredients = null,
             [FromQuery] int page = 1,
             [FromQuery] int pageSize = 4)
         {
@@ -136,6 +137,16 @@ namespace WebApplication.Controllers
                         r.Category != null &&
                         r.Category.Name != null &&
                         categories.Contains(r.Category.Name));
+                }
+
+                if (ingredients != null && ingredients.Length > 0)
+                {
+                    foreach (var ingredient in ingredients.Where(i => !string.IsNullOrWhiteSpace(i)).Select(i => i.Trim()))
+                    {
+                        var localIngredient = ingredient;
+                        recipesQuery = recipesQuery.Where(r =>
+                            r.Ingredients.Any(i => EF.Functions.ILike(i.DisplayText, $"%{localIngredient}%")));
+                    }
                 }
 
                 var totalCount = await recipesQuery.CountAsync();
@@ -213,8 +224,28 @@ namespace WebApplication.Controllers
                     })
                     .ToListAsync();
 
+                var ingredientSuggestions = await _context.RecipeIngredients
+                    .Select(i => i.DisplayText)
+                    .AsNoTracking()
+                    .ToListAsync();
+
+                var normalizedIngredientSuggestions = ingredientSuggestions
+                    .Select(GetIngredientFilterLabel)
+                    .Where(i => !string.IsNullOrWhiteSpace(i) && i.ToLower().Contains(query))
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .OrderBy(i => i)
+                    .Take(5)
+                    .Select(i => new
+                    {
+                        Name = i,
+                        type = "ingredient"
+                    })
+                    .Cast<object>()
+                    .ToList();
+
                 var allSuggestions = suggestions.Cast<object>()
                     .Concat(categorySuggestions.Cast<object>())
+                    .Concat(normalizedIngredientSuggestions)
                     .ToList();
 
                 return Ok(new { success = true, data = allSuggestions });
@@ -235,10 +266,24 @@ namespace WebApplication.Controllers
                     .OrderBy(c => c.DisplayName)
                     .ToListAsync();
 
+                var ingredients = await _context.RecipeIngredients
+                    .Select(i => i.DisplayText)
+                    .AsNoTracking()
+                    .ToListAsync();
+
+                var ingredientFilters = ingredients
+                    .Select(GetIngredientFilterLabel)
+                    .Where(i => !string.IsNullOrWhiteSpace(i))
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .OrderBy(i => i)
+                    .Select(i => new { Name = i })
+                    .ToList();
+
                 return Ok(new
                 {
                     success = true,
-                    categories
+                    categories,
+                    ingredients = ingredientFilters
                 });
             }
             catch (Exception ex)
@@ -283,16 +328,38 @@ namespace WebApplication.Controllers
         private static int ResolveCategoryId(string? cuisine)
         {
             if (string.IsNullOrWhiteSpace(cuisine))
-                return 1;
-
-            var c = cuisine.ToLowerInvariant();
-            if (c.Contains("завт") || c.Contains("чай") || c.Contains("выпеч") || c.Contains("десерт"))
                 return 2;
 
-            if (c.Contains("овощ") || c.Contains("пост") || c.Contains("вег") || c.Contains("без мяса"))
+            var c = cuisine.ToLowerInvariant();
+            if (c.Contains("перв") || c.Contains("суп") || c.Contains("бульон"))
+                return 1;
+
+            if (c.Contains("выпеч") || c.Contains("пирог") || c.Contains("десерт"))
                 return 3;
 
-            return 1;
+            if (c.Contains("напит") || c.Contains("чай") || c.Contains("кофе") || c.Contains("компот") || c.Contains("лимонад"))
+                return 4;
+
+            if (c.Contains("завт"))
+                return 2;
+
+            return 2;
+        }
+
+        private static string GetIngredientFilterLabel(string displayText)
+        {
+            if (string.IsNullOrWhiteSpace(displayText))
+                return string.Empty;
+
+            var separators = new[] { "—", "-", "," };
+            foreach (var separator in separators)
+            {
+                var index = displayText.IndexOf(separator, StringComparison.Ordinal);
+                if (index > 0)
+                    return displayText[..index].Trim();
+            }
+
+            return displayText.Trim();
         }
 
         private static async Task<string> SaveImageAsync(IFormFile file, string folderPath, string filePrefix)

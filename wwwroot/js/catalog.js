@@ -305,12 +305,12 @@ function renderRecipes(recipes) {
             card.style.cursor = 'pointer';
         }
 
-        const compactCard = document.createElement('div');
-        compactCard.className = 'recipe-compact-card';
+        const front = document.createElement('div');
+        front.className = 'recipe-card-face recipe-card-front';
 
-        const overlay = document.createElement('div');
-        overlay.className = 'recipe-card-overlay';
-        overlay.innerHTML = `
+        const back = document.createElement('div');
+        back.className = 'recipe-card-face recipe-card-back';
+        back.innerHTML = `
             <h4></h4>
             <div class="catalog-hover-badges"></div>
             <p class="catalog-hover-meta"></p>
@@ -331,12 +331,12 @@ function renderRecipes(recipes) {
         title.className = 'recipe-compact-title';
         title.textContent = recipe.name;
 
-        compactCard.appendChild(image);
-        compactCard.appendChild(kicker);
-        compactCard.appendChild(title);
+        front.appendChild(image);
+        front.appendChild(kicker);
+        front.appendChild(title);
 
-        card.appendChild(compactCard);
-        card.appendChild(overlay);
+        card.appendChild(front);
+        card.appendChild(back);
 
         card.addEventListener('mouseenter', () => {
             loadRecipePreview(card, recipe.id);
@@ -357,15 +357,15 @@ function updateRecipesCount(count) {
 }
 
 async function loadRecipePreview(card, recipeId) {
-    const overlay = card.querySelector('.recipe-card-overlay');
-    if (!overlay) return;
+    const back = card.querySelector('.recipe-card-back');
+    if (!back) return;
 
     if (previewCache.has(recipeId)) {
-        applyPreviewContent(overlay, previewCache.get(recipeId));
+        applyPreviewContent(back, previewCache.get(recipeId));
         return;
     }
 
-    overlay.classList.add('is-loading');
+    back.classList.add('is-loading');
 
     try {
         const response = await fetch(`/api/recipe/${recipeId}/preview`);
@@ -376,11 +376,11 @@ async function loadRecipePreview(card, recipeId) {
         }
 
         previewCache.set(recipeId, result.data);
-        applyPreviewContent(overlay, result.data);
+        applyPreviewContent(back, result.data);
     } catch (error) {
         console.error('Error loading preview:', error);
     } finally {
-        overlay.classList.remove('is-loading');
+        back.classList.remove('is-loading');
     }
 }
 

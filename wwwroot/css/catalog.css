@@ -70,9 +70,7 @@
 }
 
 .catalog-history-grid {
-    display: grid;
-    grid-auto-flow: column;
-    grid-auto-columns: 150px;
+    display: flex;
     gap: 8px;
     overflow-x: auto;
     padding-bottom: 4px;
@@ -81,6 +79,9 @@
 
 .catalog-history-card {
     display: block;
+    flex: 0 0 150px;
+    width: 150px;
+    max-width: 150px;
     overflow: hidden;
     border-radius: 12px;
     background: #fff;
@@ -242,6 +243,12 @@
     }
 
     .catalog-history-grid {
-        grid-auto-columns: 132px;
+        gap: 6px;
+    }
+
+    .catalog-history-card {
+        flex-basis: 132px;
+        width: 132px;
+        max-width: 132px;
     }
 }

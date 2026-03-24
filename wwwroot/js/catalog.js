@@ -7,43 +7,10 @@ const state = {
     currentPage: 1
 };
 
-const presetConfigs = {
-    all: {
-        query: '',
-        categories: [],
-        ingredients: [],
-        summary: 'Показываем весь каталог без дополнительных ограничений.'
-    },
-    firstCourse: {
-        query: '',
-        categories: ['first-course'],
-        ingredients: [],
-        summary: 'Подборка первых блюд: супы, бульоны и другие варианты для основательного начала обеда.'
-    },
-    secondCourse: {
-        query: '',
-        categories: ['second-course'],
-        ingredients: [],
-        summary: 'Здесь собраны вторые блюда, которые можно поставить в центр обычного домашнего ужина.'
-    },
-    pastry: {
-        query: '',
-        categories: ['pastry'],
-        ingredients: [],
-        summary: 'Раздел с выпечкой: пироги, запеканки и другие рецепты для духовки.'
-    },
-    drinks: {
-        query: '',
-        categories: ['drinks'],
-        ingredients: [],
-        summary: 'Здесь будут напитки: домашние, простые и рассчитанные на понятные ингредиенты.'
-    }
-};
-
 document.addEventListener('DOMContentLoaded', async () => {
     await loadFilters();
     setupEventListeners();
-    updateCatalogSummary(presetConfigs.all.summary);
+    updateCatalogSummary();
     await loadRecipes();
 });
 
@@ -119,14 +86,14 @@ function setupEventListeners() {
             searchTimeout = setTimeout(() => {
                 state.searchQuery = query;
                 state.currentPage = 1;
-                activatePreset(null);
-                updateCatalogSummary('Поиск работает поверх выбранного типа блюда и ингредиентов.');
+                updateCatalogSummary();
                 loadRecipes();
             }, 250);
         } else {
             hideSuggestions();
             state.searchQuery = '';
             state.currentPage = 1;
+            updateCatalogSummary();
             loadRecipes();
         }
     });
@@ -134,20 +101,14 @@ function setupEventListeners() {
     document.getElementById('applyBtn').addEventListener('click', () => {
         updateSelectedFilters();
         state.currentPage = 1;
-        activatePreset(null);
-        updateCatalogSummary('Показываем результаты по выбранному типу блюда и отмеченным ингредиентам.');
+        updateCatalogSummary();
         loadRecipes();
     });
 
     document.getElementById('resetBtn').addEventListener('click', () => {
         resetFilters();
-        activatePreset('all');
-        updateCatalogSummary(presetConfigs.all.summary);
+        updateCatalogSummary();
         loadRecipes();
-    });
-
-    document.querySelectorAll('.preset-chip').forEach(chip => {
-        chip.addEventListener('click', () => applyPreset(chip.dataset.preset || 'all'));
     });
 }
 
@@ -164,40 +125,26 @@ function resetFilters() {
     hideSuggestions();
 }
 
-function applyPreset(presetName) {
-    const preset = presetConfigs[presetName] || presetConfigs.all;
-
-    state.searchQuery = preset.query;
-    state.selectedCategories = [...preset.categories];
-    state.selectedIngredients = [...preset.ingredients];
-    state.currentPage = 1;
-
-    document.getElementById('searchInput').value = preset.query;
-
-    document.querySelectorAll('.category-filter').forEach(input => {
-        input.checked = state.selectedCategories.includes(input.value);
-    });
-
-    document.querySelectorAll('.ingredient-filter').forEach(input => {
-        input.checked = state.selectedIngredients.includes(input.value);
-    });
-
-    activatePreset(presetName);
-    updateCatalogSummary(preset.summary);
-    hideSuggestions();
-    loadRecipes();
-}
-
-function activatePreset(presetName) {
-    document.querySelectorAll('.preset-chip').forEach(chip => {
-        chip.classList.toggle('is-active', presetName !== null && chip.dataset.preset === presetName);
-    });
-}
-
-function updateCatalogSummary(text) {
+function updateCatalogSummary() {
     const summary = document.getElementById('catalogSummary');
     if (summary) {
-        summary.textContent = text;
+        const parts = [];
+
+        if (state.searchQuery) {
+            parts.push(`поиск: ${state.searchQuery}`);
+        }
+
+        if (state.selectedCategories.length > 0) {
+            parts.push(`тип блюда: ${state.selectedCategories.length}`);
+        }
+
+        if (state.selectedIngredients.length > 0) {
+            parts.push(`ингредиенты: ${state.selectedIngredients.length}`);
+        }
+
+        summary.textContent = parts.length > 0
+            ? `Активные параметры: ${parts.join(' • ')}.`
+            : 'Каталог собирает результаты по текущему поиску и выбранным фильтрам.';
     }
 }
 
@@ -235,6 +182,7 @@ function renderSuggestions(suggestions) {
             state.searchQuery = suggestion.name;
             state.currentPage = 1;
             hideSuggestions();
+            updateCatalogSummary();
             loadRecipes();
         });
         list.appendChild(item);

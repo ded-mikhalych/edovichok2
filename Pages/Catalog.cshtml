@@ -53,6 +53,17 @@
             Каталог собирает результаты по текущему поиску и выбранным фильтрам.
         </div>
 
+        <section id="viewHistorySection" class="catalog-history" hidden>
+            <div class="catalog-history-header">
+                <div>
+                    <p class="card-kicker">История</p>
+                    <h3>Недавно просмотренные</h3>
+                </div>
+                <button id="clearHistoryBtn" type="button" class="button button-secondary">Очистить</button>
+            </div>
+            <div id="viewHistoryCards" class="catalog-history-grid"></div>
+        </section>
+
         <div id="cards" class="catalog-grid"></div>
         <div id="pagination" class="catalog-pagination"></div>
     </section>

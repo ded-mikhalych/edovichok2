@@ -1,4 +1,6 @@
 const PAGE_SIZE = 6;
+const VIEW_HISTORY_KEY = 'recipe-view-history';
+const VIEW_HISTORY_LIMIT = 6;
 
 const state = {
     selectedCategories: [],
@@ -8,6 +10,7 @@ const state = {
 };
 
 document.addEventListener('DOMContentLoaded', async () => {
+    renderViewHistory();
     await loadFilters();
     setupEventListeners();
     updateCatalogSummary();
@@ -75,6 +78,7 @@ function renderIngredients(ingredients) {
 
 function setupEventListeners() {
     const searchInput = document.getElementById('searchInput');
+    const clearHistoryBtn = document.getElementById('clearHistoryBtn');
     let searchTimeout;
 
     searchInput.addEventListener('input', event => {
@@ -109,6 +113,11 @@ function setupEventListeners() {
         resetFilters();
         updateCatalogSummary();
         loadRecipes();
+    });
+
+    clearHistoryBtn?.addEventListener('click', () => {
+        localStorage.removeItem(VIEW_HISTORY_KEY);
+        renderViewHistory();
     });
 }
 
@@ -236,6 +245,84 @@ function getRecipeUrl(recipe) {
     return `/recipe/${encodeURIComponent(recipe.slug)}`;
 }
 
+function getViewHistory() {
+    try {
+        const raw = localStorage.getItem(VIEW_HISTORY_KEY);
+        if (!raw) {
+            return [];
+        }
+
+        const parsed = JSON.parse(raw);
+        return Array.isArray(parsed) ? parsed : [];
+    } catch (error) {
+        console.error('Error reading view history:', error);
+        return [];
+    }
+}
+
+function saveViewedRecipe(recipe) {
+    if (!recipe?.id || !recipe?.slug) {
+        return;
+    }
+
+    const nextItem = {
+        id: recipe.id,
+        name: recipe.name,
+        slug: recipe.slug,
+        imageFileName: recipe.imageFileName || '',
+        category: recipe.category || 'Рецепт'
+    };
+
+    const history = getViewHistory().filter(item => item.id !== nextItem.id);
+    history.unshift(nextItem);
+
+    localStorage.setItem(
+        VIEW_HISTORY_KEY,
+        JSON.stringify(history.slice(0, VIEW_HISTORY_LIMIT))
+    );
+}
+
+function renderViewHistory() {
+    const section = document.getElementById('viewHistorySection');
+    const container = document.getElementById('viewHistoryCards');
+
+    if (!section || !container) {
+        return;
+    }
+
+    const history = getViewHistory();
+    section.hidden = history.length === 0;
+    container.innerHTML = '';
+
+    history.forEach(recipe => {
+        const card = document.createElement('a');
+        card.className = 'catalog-history-card';
+        card.href = getRecipeUrl(recipe) ?? '/in-development';
+
+        const image = document.createElement('img');
+        image.src = recipe.imageFileName && recipe.imageFileName.startsWith('https://')
+            ? recipe.imageFileName
+            : `/images/${recipe.imageFileName}`;
+        image.alt = recipe.name;
+
+        const body = document.createElement('div');
+        body.className = 'catalog-history-body';
+
+        const kicker = document.createElement('p');
+        kicker.className = 'card-kicker';
+        kicker.textContent = recipe.category || 'Рецепт';
+
+        const title = document.createElement('h4');
+        title.textContent = recipe.name;
+
+        body.appendChild(kicker);
+        body.appendChild(title);
+        card.appendChild(image);
+        card.appendChild(body);
+        container.appendChild(card);
+    });
+}
+
 function renderRecipes(recipes) {
     const container = document.getElementById('cards');
     container.innerHTML = '';
@@ -250,6 +337,10 @@ function renderRecipes(recipes) {
         const card = document.createElement('a');
         card.className = 'editorial-card catalog-editorial-card';
         card.href = recipeUrl ?? '/in-development';
+        card.addEventListener('click', () => {
+            saveViewedRecipe(recipe);
+            renderViewHistory();
+        });
 
         const image = document.createElement('img');
         image.src = recipe.imageFileName && recipe.imageFileName.startsWith('https://')

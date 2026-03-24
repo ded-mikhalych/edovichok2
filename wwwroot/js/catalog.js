@@ -1,6 +1,7 @@
 const PAGE_SIZE = 6;
 const VIEW_HISTORY_CLIENT_KEY = 'recipe-history-client-key';
 const VIEW_HISTORY_LIMIT = 6;
+const DEFAULT_EXTERNAL_IMAGE = 'https://placehold.co/600x400/F4EEE2/F4EEE2.png';
 
 const state = {
     selectedCategories: [],
@@ -256,6 +257,16 @@ function getRecipeUrl(recipe) {
     return `/recipe/${encodeURIComponent(recipe.slug)}`;
 }
 
+function getRecipeImageSrc(imageFileName) {
+    if (!imageFileName) {
+        return DEFAULT_EXTERNAL_IMAGE;
+    }
+
+    return imageFileName.startsWith('https://')
+        ? imageFileName
+        : `/images/${imageFileName}`;
+}
+
 function getClientKey() {
     const existingKey = localStorage.getItem(VIEW_HISTORY_CLIENT_KEY);
     if (existingKey) {
@@ -338,9 +349,7 @@ async function renderViewHistory() {
             card.style.maxWidth = '136px';
 
             const image = document.createElement('img');
-            image.src = item.imageFileName && item.imageFileName.startsWith('https://')
-                ? item.imageFileName
-                : `/images/${item.imageFileName}`;
+            image.src = getRecipeImageSrc(item.imageFileName);
             image.alt = item.name;
             image.style.width = '100%';
             image.style.height = '76px';
@@ -397,9 +406,7 @@ function renderRecipes(recipes) {
         });
 
         const image = document.createElement('img');
-        image.src = recipe.imageFileName && recipe.imageFileName.startsWith('https://')
-            ? recipe.imageFileName
-            : `/images/${recipe.imageFileName}`;
+        image.src = getRecipeImageSrc(recipe.imageFileName);
         image.alt = recipe.name;
 
         const body = document.createElement('div');

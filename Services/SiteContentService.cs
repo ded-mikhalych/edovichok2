@@ -6,6 +6,7 @@ namespace WebApplication.Services;
 
 public class SiteContentService
 {
+    public const string DefaultExternalImage = "https://placehold.co/600x400/F4EEE2/F4EEE2.png";
     private readonly ApplicationDbContext _context;
 
     public SiteContentService(ApplicationDbContext context)
@@ -145,7 +146,7 @@ public class SiteContentService
     {
         if (string.IsNullOrWhiteSpace(imageFileName))
         {
-            return "/images/placeholder.png";
+            return DefaultExternalImage;
         }
 
         return imageFileName.StartsWith("https://", StringComparison.OrdinalIgnoreCase)

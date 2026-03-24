@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using WebApplication.Data;
 using WebApplication.Models;
 using WebApplication.Models.Requests;
+using WebApplication.Services;
 using RecipeEntity = WebApplication.Models.Recipe;
 
 namespace WebApplication.Pages.Api.Recipe;
@@ -66,7 +67,7 @@ public class IndexModel : PageModel
 
         var mainImageFileName = request.MainImage != null
             ? await RecipeApiHelpers.SaveImageAsync(request.MainImage, imageFolder, slug + "-main")
-            : "salads.png";
+            : SiteContentService.DefaultExternalImage;
 
         var recipe = new RecipeEntity
         {

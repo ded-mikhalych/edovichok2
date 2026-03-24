@@ -16,6 +16,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     await renderViewHistory();
     await loadFilters();
     setupEventListeners();
+    setupPaginationDebug();
     updateCatalogSummary();
     await loadRecipes();
 });
@@ -487,6 +488,54 @@ function createPaginationButton(label, page, disabled, isActive) {
         loadRecipes();
     });
     return button;
+}
+
+function setupPaginationDebug() {
+    const container = document.getElementById('pagination');
+    if (!container) {
+        return;
+    }
+
+    const badge = document.createElement('div');
+    badge.id = 'paginationDebugBadge';
+    badge.style.position = 'fixed';
+    badge.style.right = '16px';
+    badge.style.bottom = '16px';
+    badge.style.zIndex = '100000';
+    badge.style.padding = '8px 10px';
+    badge.style.borderRadius = '10px';
+    badge.style.background = 'rgba(28, 22, 18, 0.92)';
+    badge.style.color = '#fff';
+    badge.style.fontSize = '12px';
+    badge.style.lineHeight = '1.3';
+    badge.style.maxWidth = '320px';
+    badge.style.pointerEvents = 'none';
+    badge.textContent = 'pagination debug: ready';
+    document.body.appendChild(badge);
+
+    container.addEventListener('mousemove', event => {
+        const topEl = document.elementFromPoint(event.clientX, event.clientY);
+        badge.textContent = `pagination debug: top=${describeElement(topEl)} target=${describeElement(event.target)}`;
+    });
+
+    container.addEventListener('click', event => {
+        const topEl = document.elementFromPoint(event.clientX, event.clientY);
+        badge.textContent = `pagination click: top=${describeElement(topEl)} target=${describeElement(event.target)}`;
+    });
+}
+
+function describeElement(element) {
+    if (!element) {
+        return 'null';
+    }
+
+    const tag = element.tagName ? element.tagName.toLowerCase() : 'unknown';
+    const id = element.id ? `#${element.id}` : '';
+    const classes = element.classList && element.classList.length > 0
+        ? `.${Array.from(element.classList).join('.')}`
+        : '';
+
+    return `${tag}${id}${classes}`;
 }
 
 document.addEventListener('click', event => {

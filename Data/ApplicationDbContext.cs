@@ -14,6 +14,7 @@ namespace WebApplication.Data
         public DbSet<Recipe> Recipes { get; set; }
         public DbSet<RecipeIngredient> RecipeIngredients { get; set; }
         public DbSet<RecipeStep> RecipeSteps { get; set; }
+        public DbSet<RecipeComment> RecipeComments { get; set; }
         public DbSet<RecipeViewHistory> RecipeViewHistories { get; set; }
         public DbSet<News> News { get; set; }
 
@@ -31,6 +32,12 @@ namespace WebApplication.Data
                 .HasOne(s => s.Recipe)
                 .WithMany(r => r.Steps)
                 .HasForeignKey(s => s.RecipeId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<RecipeComment>()
+                .HasOne(c => c.Recipe)
+                .WithMany(r => r.Comments)
+                .HasForeignKey(c => c.RecipeId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<RecipeViewHistory>()

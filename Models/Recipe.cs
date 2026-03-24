@@ -17,6 +17,7 @@ namespace WebApplication.Models
         public Category? Category { get; set; }
         public ICollection<RecipeIngredient> Ingredients { get; set; } = new List<RecipeIngredient>();
         public ICollection<RecipeStep> Steps { get; set; } = new List<RecipeStep>();
+        public ICollection<RecipeComment> Comments { get; set; } = new List<RecipeComment>();
 
         public DateTime CreatedAt { get; set; }
         

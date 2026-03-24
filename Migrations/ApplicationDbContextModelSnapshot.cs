@@ -403,6 +403,35 @@ namespace WebApplication.Migrations
                         });
                 });
 
+            modelBuilder.Entity("WebApplication.Models.RecipeComment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Body")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("ClientKey")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("RecipeId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RecipeId");
+
+                    b.ToTable("RecipeComments");
+                });
+
             modelBuilder.Entity("WebApplication.Models.RecipeIngredient", b =>
                 {
                     b.Property<int>("Id")
@@ -1600,6 +1629,17 @@ namespace WebApplication.Migrations
                     b.Navigation("Recipe");
                 });
 
+            modelBuilder.Entity("WebApplication.Models.RecipeComment", b =>
+                {
+                    b.HasOne("WebApplication.Models.Recipe", "Recipe")
+                        .WithMany("Comments")
+                        .HasForeignKey("RecipeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Recipe");
+                });
+
             modelBuilder.Entity("WebApplication.Models.RecipeStep", b =>
                 {
                     b.HasOne("WebApplication.Models.Recipe", "Recipe")
@@ -1629,6 +1669,8 @@ namespace WebApplication.Migrations
 
             modelBuilder.Entity("WebApplication.Models.Recipe", b =>
                 {
+                    b.Navigation("Comments");
+
                     b.Navigation("Ingredients");
 
                     b.Navigation("Steps");

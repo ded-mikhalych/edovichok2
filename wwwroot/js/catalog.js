@@ -1,6 +1,7 @@
 ﻿const PAGE_SIZE = 4;
 const VIEW_HISTORY_CLIENT_KEY = 'recipe-history-client-key';
 const VIEW_HISTORY_LIMIT = 6;
+const COMMENT_PREVIEW_LIMIT = 2;
 const DEFAULT_EXTERNAL_IMAGE = 'https://placehold.co/600x400/F4EEE2/F4EEE2.png';
 
 const state = {
@@ -11,6 +12,7 @@ const state = {
 };
 
 let recipesAbortController = null;
+let activeCommentCard = null;
 
 document.addEventListener('DOMContentLoaded', async () => {
     await renderViewHistory();
@@ -348,12 +350,118 @@ async function renderViewHistory() {
     }
 }
 
+function formatCommentTime(value) {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) {
+        return '';
+    }
+
+    return new Intl.DateTimeFormat('ru-RU', {
+        day: '2-digit',
+        month: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+    }).format(date);
+}
+
+function createCommentItem(comment) {
+    const item = document.createElement('article');
+    item.className = 'catalog-comment-item';
+
+    const meta = document.createElement('div');
+    meta.className = 'catalog-comment-meta';
+    meta.textContent = formatCommentTime(comment.createdAt);
+
+    const body = document.createElement('p');
+    body.className = 'catalog-comment-text';
+    body.textContent = comment.body;
+
+    item.appendChild(meta);
+    item.appendChild(body);
+    return item;
+}
+
+function renderRecipeComments(list, comments) {
+    list.innerHTML = '';
+
+    if (!comments.length) {
+        const empty = document.createElement('p');
+        empty.className = 'catalog-comment-empty';
+        empty.textContent = 'Пока нет комментариев. Будьте первым.';
+        list.appendChild(empty);
+        return;
+    }
+
+    comments.forEach(comment => {
+        list.appendChild(createCommentItem(comment));
+    });
+}
+
+async function loadRecipeComments(recipeId) {
+    const response = await fetch(`/api/recipe/${recipeId}/comments?limit=${COMMENT_PREVIEW_LIMIT}`, {
+        headers: getClientHeaders()
+    });
+
+    const result = await response.json();
+    if (!response.ok || !result.success) {
+        throw new Error(result.message || 'Не удалось загрузить комментарии.');
+    }
+
+    return Array.isArray(result.data) ? result.data : [];
+}
+
+async function openCommentPopup(shell, recipe) {
+    if (activeCommentCard && activeCommentCard !== shell) {
+        closeCommentPopup(activeCommentCard);
+    }
+
+    activeCommentCard = shell;
+    shell.classList.add('is-commenting');
+
+    const popup = shell.querySelector('.catalog-comment-popup');
+    const list = shell.querySelector('.catalog-comment-list');
+    const status = shell.querySelector('.catalog-comment-status');
+    const textarea = shell.querySelector('.catalog-comment-input');
+
+    if (!popup || !list || !status || !textarea) {
+        return;
+    }
+
+    popup.hidden = false;
+    status.textContent = 'Загрузка комментариев...';
+
+    try {
+        const comments = await loadRecipeComments(recipe.id);
+        renderRecipeComments(list, comments);
+        status.textContent = '';
+    } catch (error) {
+        console.error('Error loading recipe comments:', error);
+        status.textContent = 'Не удалось загрузить комментарии.';
+    }
+
+    textarea.focus();
+}
+
+function closeCommentPopup(shell) {
+    const popup = shell?.querySelector('.catalog-comment-popup');
+    if (popup) {
+        popup.hidden = true;
+    }
+
+    shell?.classList.remove('is-commenting');
+
+    if (activeCommentCard === shell) {
+        activeCommentCard = null;
+    }
+}
+
 function renderRecipes(recipes) {
     const container = document.getElementById('cards');
     if (!container) {
         return;
     }
 
+    activeCommentCard = null;
     container.innerHTML = '';
 
     if (recipes.length === 0) {
@@ -362,6 +470,9 @@ function renderRecipes(recipes) {
     }
 
     recipes.forEach(recipe => {
+        const shell = document.createElement('article');
+        shell.className = 'catalog-card-shell';
+
         const card = document.createElement('a');
         card.className = 'editorial-card catalog-editorial-card';
         card.href = getRecipeUrl(recipe) ?? '/in-development';
@@ -388,7 +499,111 @@ function renderRecipes(recipes) {
         body.appendChild(title);
         card.appendChild(image);
         card.appendChild(body);
-        container.appendChild(card);
+
+        const actions = document.createElement('div');
+        actions.className = 'catalog-card-actions';
+
+        const commentButton = document.createElement('button');
+        commentButton.type = 'button';
+        commentButton.className = 'button button-secondary catalog-comment-button';
+        commentButton.textContent = 'Комментарий';
+        commentButton.addEventListener('click', async event => {
+            event.preventDefault();
+            event.stopPropagation();
+
+            if (shell.classList.contains('is-commenting')) {
+                closeCommentPopup(shell);
+                return;
+            }
+
+            await openCommentPopup(shell, recipe);
+        });
+
+        const popup = document.createElement('div');
+        popup.className = 'catalog-comment-popup';
+        popup.hidden = true;
+        popup.addEventListener('click', event => {
+            event.stopPropagation();
+        });
+
+        const popupTitle = document.createElement('p');
+        popupTitle.className = 'catalog-comment-title';
+        popupTitle.textContent = 'Короткий комментарий';
+
+        const commentList = document.createElement('div');
+        commentList.className = 'catalog-comment-list';
+
+        const commentStatus = document.createElement('p');
+        commentStatus.className = 'catalog-comment-status';
+
+        const form = document.createElement('form');
+        form.className = 'catalog-comment-form';
+
+        const textarea = document.createElement('textarea');
+        textarea.className = 'catalog-comment-input';
+        textarea.name = 'comment';
+        textarea.rows = 3;
+        textarea.maxLength = 160;
+        textarea.placeholder = 'Напишите короткий комментарий...';
+
+        const submitButton = document.createElement('button');
+        submitButton.type = 'submit';
+        submitButton.className = 'button button-primary catalog-comment-submit';
+        submitButton.textContent = 'Отправить';
+
+        form.addEventListener('submit', async event => {
+            event.preventDefault();
+            event.stopPropagation();
+
+            const bodyValue = textarea.value.trim();
+            commentStatus.textContent = '';
+
+            if (bodyValue.length < 3) {
+                commentStatus.textContent = 'Введите хотя бы 3 символа.';
+                return;
+            }
+
+            submitButton.disabled = true;
+
+            try {
+                const response = await fetch(`/api/recipe/${recipe.id}/comments`, {
+                    method: 'POST',
+                    headers: {
+                        ...getClientHeaders(),
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ body: bodyValue })
+                });
+
+                const result = await response.json();
+                if (!response.ok || !result.success) {
+                    throw new Error(result.message || 'Не удалось сохранить комментарий.');
+                }
+
+                textarea.value = '';
+                const updatedComments = await loadRecipeComments(recipe.id);
+                renderRecipeComments(commentList, updatedComments);
+                commentStatus.textContent = 'Комментарий отправлен.';
+            } catch (error) {
+                console.error('Error saving recipe comment:', error);
+                commentStatus.textContent = error.message || 'Не удалось сохранить комментарий.';
+            } finally {
+                submitButton.disabled = false;
+            }
+        });
+
+        form.appendChild(textarea);
+        form.appendChild(submitButton);
+        popup.appendChild(popupTitle);
+        popup.appendChild(commentList);
+        popup.appendChild(commentStatus);
+        popup.appendChild(form);
+        actions.appendChild(commentButton);
+
+        shell.appendChild(card);
+        shell.appendChild(actions);
+        shell.appendChild(popup);
+        container.appendChild(shell);
     });
 }
 
@@ -440,7 +655,11 @@ function createPaginationButton(label, page, disabled, isActive) {
 }
 
 document.addEventListener('click', event => {
-    if (!event.target.matches('#searchInput')) {
+    if (!event.target.closest('.search-wrapper')) {
         hideSuggestions();
+    }
+
+    if (activeCommentCard && !activeCommentCard.contains(event.target)) {
+        closeCommentPopup(activeCommentCard);
     }
 });

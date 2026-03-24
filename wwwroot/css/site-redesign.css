@@ -319,6 +319,102 @@ img { max-width: 100%; display: block; }
 .recipe-teaser h3,
 .category-entry h3 { margin: 0 0 10px; font-size: 1.2rem; }
 
+.catalog-card-shell {
+  position: relative;
+}
+
+.catalog-card-actions {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 3;
+  opacity: 0;
+  transform: translateY(-4px);
+  transition: opacity 0.18s ease, transform 0.18s ease;
+}
+
+.catalog-card-shell:hover .catalog-card-actions,
+.catalog-card-shell.is-commenting .catalog-card-actions {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.catalog-comment-button {
+  padding: 10px 14px;
+  box-shadow: 0 14px 28px rgba(84, 45, 17, 0.12);
+}
+
+.catalog-comment-popup {
+  position: absolute;
+  top: 58px;
+  right: 14px;
+  z-index: 4;
+  width: min(300px, calc(100% - 28px));
+  padding: 16px;
+  border-radius: 20px;
+  background: rgba(255, 250, 242, 0.98);
+  border: 1px solid rgba(81, 49, 18, 0.12);
+  box-shadow: 0 24px 44px rgba(84, 45, 17, 0.16);
+}
+
+.catalog-comment-title {
+  margin: 0 0 12px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.catalog-comment-list {
+  display: grid;
+  gap: 10px;
+  max-height: 150px;
+  overflow-y: auto;
+  margin-bottom: 12px;
+}
+
+.catalog-comment-item,
+.catalog-comment-empty {
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: rgba(255, 251, 246, 0.92);
+  border: 1px solid rgba(83, 46, 19, 0.08);
+}
+
+.catalog-comment-meta,
+.catalog-comment-empty,
+.catalog-comment-status {
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.catalog-comment-text {
+  margin: 4px 0 0;
+  line-height: 1.45;
+}
+
+.catalog-comment-form {
+  display: grid;
+  gap: 10px;
+}
+
+.catalog-comment-input {
+  width: 100%;
+  min-height: 84px;
+  resize: vertical;
+  border: 1px solid rgba(83, 46, 19, 0.14);
+  background: rgba(255, 251, 246, 0.95);
+  border-radius: 16px;
+  padding: 12px 14px;
+  font: inherit;
+  color: var(--ink);
+}
+
+.catalog-comment-status {
+  min-height: 1.2em;
+  margin: 0 0 10px;
+}
+
 .split-section,
 .catalog-shell,
 .recipe-shell {
@@ -866,6 +962,19 @@ input[type="submit"] {
 
   .catalog-search-controls {
     flex-direction: column;
+  }
+
+  .catalog-card-actions {
+    position: static;
+    opacity: 1;
+    transform: none;
+    margin-top: 12px;
+  }
+
+  .catalog-comment-popup {
+    position: static;
+    width: 100%;
+    margin-top: 12px;
   }
 
   .editorial-grid,

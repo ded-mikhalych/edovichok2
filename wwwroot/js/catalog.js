@@ -297,6 +297,13 @@ async function renderViewHistory() {
     }
 
     try {
+        container.style.display = 'flex';
+        container.style.flexWrap = 'nowrap';
+        container.style.alignItems = 'stretch';
+        container.style.gap = '8px';
+        container.style.overflowX = 'auto';
+        container.style.overflowY = 'hidden';
+
         const response = await fetch(`/api/recipe/history?limit=${VIEW_HISTORY_LIMIT}`, {
             headers: getClientHeaders()
         });
@@ -317,22 +324,38 @@ async function renderViewHistory() {
             const card = document.createElement('a');
             card.className = 'catalog-history-card';
             card.href = getRecipeUrl(item) ?? '/in-development';
+            card.style.display = 'block';
+            card.style.flex = '0 0 136px';
+            card.style.width = '136px';
+            card.style.minWidth = '136px';
+            card.style.maxWidth = '136px';
 
             const image = document.createElement('img');
             image.src = item.imageFileName && item.imageFileName.startsWith('https://')
                 ? item.imageFileName
                 : `/images/${item.imageFileName}`;
             image.alt = item.name;
+            image.style.width = '100%';
+            image.style.height = '76px';
+            image.style.objectFit = 'cover';
+            image.style.display = 'block';
 
             const body = document.createElement('div');
             body.className = 'catalog-history-body';
+            body.style.padding = '7px 8px 8px';
 
             const kicker = document.createElement('p');
             kicker.className = 'card-kicker';
             kicker.textContent = item.category;
+            kicker.style.margin = '0 0 3px';
+            kicker.style.fontSize = '0.68rem';
+            kicker.style.lineHeight = '1.15';
 
             const title = document.createElement('h4');
             title.textContent = item.name;
+            title.style.margin = '0';
+            title.style.fontSize = '0.76rem';
+            title.style.lineHeight = '1.22';
 
             body.appendChild(kicker);
             body.appendChild(title);

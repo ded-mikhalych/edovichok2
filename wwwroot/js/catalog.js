@@ -11,13 +11,11 @@ const state = {
 };
 
 let recipesAbortController = null;
-let paginationDebugBadge = null;
 
 document.addEventListener('DOMContentLoaded', async () => {
     await renderViewHistory();
     await loadFilters();
     setupEventListeners();
-    setupPaginationDebug();
     updateCatalogSummary();
     await loadRecipes();
 });
@@ -232,7 +230,6 @@ function updateSelectedFilters() {
 
 async function loadRecipes() {
     updateSelectedFilters();
-    setPaginationDebug(`load start: page=${state.currentPage}`);
 
     if (recipesAbortController) {
         recipesAbortController.abort();
@@ -245,7 +242,7 @@ async function loadRecipes() {
         if (state.searchQuery) params.append('query', state.searchQuery);
         state.selectedCategories.forEach(cat => params.append('categories', cat));
         state.selectedIngredients.forEach(ingredient => params.append('ingredients', ingredient));
-        params.append('page', String(state.currentPage));
+        params.append('currentPage', String(state.currentPage));
         params.append('pageSize', String(PAGE_SIZE));
 
         const response = await fetch(`/api/recipe/search?${params.toString()}`, {
@@ -260,18 +257,15 @@ async function loadRecipes() {
             throw new Error(result.message || 'Search request failed.');
         }
 
-        setPaginationDebug(`load success: requested=${params.get('page')} returned=${result.page} total=${result.totalPages} count=${result.count}`);
         state.currentPage = Number.isInteger(result.page) ? result.page : state.currentPage;
         renderRecipes(Array.isArray(result.data) ? result.data : []);
         updateRecipesCount(result.count || 0);
         renderPagination(result.page || 1, result.totalPages || 0);
     } catch (error) {
         if (error.name === 'AbortError') {
-            setPaginationDebug(`load aborted: page=${state.currentPage}`);
             return;
         }
 
-        setPaginationDebug(`load error: ${error.message}`);
         console.error('Error loading recipes:', error);
         document.getElementById('cards').innerHTML = '<article class="catalog-empty"><p class="card-kicker">Ошибка</p><h3>Не удалось загрузить рецепты.</h3><p>Попробуйте обновить страницу немного позже.</p></article>';
         document.getElementById('pagination').innerHTML = '';
@@ -485,7 +479,6 @@ function createPaginationButton(label, page, disabled, isActive) {
     button.addEventListener('click', event => {
         event.preventDefault();
         event.stopPropagation();
-        setPaginationDebug(`button click: label=${label} page=${page} disabled=${disabled} current=${state.currentPage}`);
 
         if (disabled || page < 1 || page === state.currentPage) {
             return;
@@ -495,55 +488,6 @@ function createPaginationButton(label, page, disabled, isActive) {
         loadRecipes();
     });
     return button;
-}
-
-function setupPaginationDebug() {
-    const container = document.getElementById('pagination');
-    if (!container) {
-        return;
-    }
-
-    paginationDebugBadge = document.createElement('div');
-    paginationDebugBadge.id = 'paginationDebugBadge';
-    paginationDebugBadge.style.position = 'fixed';
-    paginationDebugBadge.style.right = '16px';
-    paginationDebugBadge.style.bottom = '16px';
-    paginationDebugBadge.style.zIndex = '100000';
-    paginationDebugBadge.style.padding = '8px 10px';
-    paginationDebugBadge.style.borderRadius = '10px';
-    paginationDebugBadge.style.background = 'rgba(28, 22, 18, 0.92)';
-    paginationDebugBadge.style.color = '#fff';
-    paginationDebugBadge.style.fontSize = '12px';
-    paginationDebugBadge.style.lineHeight = '1.3';
-    paginationDebugBadge.style.maxWidth = '360px';
-    paginationDebugBadge.style.pointerEvents = 'none';
-    paginationDebugBadge.textContent = 'pagination debug: ready';
-    document.body.appendChild(paginationDebugBadge);
-
-    container.addEventListener('mousemove', event => {
-        const topEl = document.elementFromPoint(event.clientX, event.clientY);
-        setPaginationDebug(`hover: top=${describeElement(topEl)} target=${describeElement(event.target)}`);
-    });
-}
-
-function setPaginationDebug(text) {
-    if (paginationDebugBadge) {
-        paginationDebugBadge.textContent = text;
-    }
-}
-
-function describeElement(element) {
-    if (!element) {
-        return 'null';
-    }
-
-    const tag = element.tagName ? element.tagName.toLowerCase() : 'unknown';
-    const id = element.id ? `#${element.id}` : '';
-    const classes = element.classList && element.classList.length > 0
-        ? `.${Array.from(element.classList).join('.')}`
-        : '';
-
-    return `${tag}${id}${classes}`;
 }
 
 document.addEventListener('click', event => {

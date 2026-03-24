@@ -14,12 +14,12 @@ public class SearchModel : PageModel
         _context = context;
     }
 
-    public async Task<IActionResult> OnGetAsync(string query = "", string[]? categories = null, string[]? ingredients = null, int page = 1, int pageSize = 4)
+    public async Task<IActionResult> OnGetAsync(string query = "", string[]? categories = null, string[]? ingredients = null, int currentPage = 1, int pageSize = 4)
     {
         try
         {
             var normalizedPageSize = Math.Clamp(pageSize, 1, 24);
-            var normalizedPage = Math.Max(page, 1);
+            var normalizedPage = Math.Max(currentPage, 1);
 
             var recipesQuery = _context.Recipes
                 .Include(r => r.Category)

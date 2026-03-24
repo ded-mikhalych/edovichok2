@@ -11,6 +11,7 @@ const state = {
 };
 
 let recipesAbortController = null;
+let paginationDebugBadge = null;
 
 document.addEventListener('DOMContentLoaded', async () => {
     await renderViewHistory();
@@ -231,6 +232,7 @@ function updateSelectedFilters() {
 
 async function loadRecipes() {
     updateSelectedFilters();
+    setPaginationDebug(`load start: page=${state.currentPage}`);
 
     if (recipesAbortController) {
         recipesAbortController.abort();
@@ -258,15 +260,18 @@ async function loadRecipes() {
             throw new Error(result.message || 'Search request failed.');
         }
 
+        setPaginationDebug(`load success: requested=${params.get('page')} returned=${result.page} total=${result.totalPages} count=${result.count}`);
         state.currentPage = Number.isInteger(result.page) ? result.page : state.currentPage;
         renderRecipes(Array.isArray(result.data) ? result.data : []);
         updateRecipesCount(result.count || 0);
         renderPagination(result.page || 1, result.totalPages || 0);
     } catch (error) {
         if (error.name === 'AbortError') {
+            setPaginationDebug(`load aborted: page=${state.currentPage}`);
             return;
         }
 
+        setPaginationDebug(`load error: ${error.message}`);
         console.error('Error loading recipes:', error);
         document.getElementById('cards').innerHTML = '<article class="catalog-empty"><p class="card-kicker">Ошибка</p><h3>Не удалось загрузить рецепты.</h3><p>Попробуйте обновить страницу немного позже.</p></article>';
         document.getElementById('pagination').innerHTML = '';
@@ -479,6 +484,8 @@ function createPaginationButton(label, page, disabled, isActive) {
     button.dataset.page = String(page);
     button.addEventListener('click', event => {
         event.preventDefault();
+        event.stopPropagation();
+        setPaginationDebug(`button click: label=${label} page=${page} disabled=${disabled} current=${state.currentPage}`);
 
         if (disabled || page < 1 || page === state.currentPage) {
             return;
@@ -496,32 +503,33 @@ function setupPaginationDebug() {
         return;
     }
 
-    const badge = document.createElement('div');
-    badge.id = 'paginationDebugBadge';
-    badge.style.position = 'fixed';
-    badge.style.right = '16px';
-    badge.style.bottom = '16px';
-    badge.style.zIndex = '100000';
-    badge.style.padding = '8px 10px';
-    badge.style.borderRadius = '10px';
-    badge.style.background = 'rgba(28, 22, 18, 0.92)';
-    badge.style.color = '#fff';
-    badge.style.fontSize = '12px';
-    badge.style.lineHeight = '1.3';
-    badge.style.maxWidth = '320px';
-    badge.style.pointerEvents = 'none';
-    badge.textContent = 'pagination debug: ready';
-    document.body.appendChild(badge);
+    paginationDebugBadge = document.createElement('div');
+    paginationDebugBadge.id = 'paginationDebugBadge';
+    paginationDebugBadge.style.position = 'fixed';
+    paginationDebugBadge.style.right = '16px';
+    paginationDebugBadge.style.bottom = '16px';
+    paginationDebugBadge.style.zIndex = '100000';
+    paginationDebugBadge.style.padding = '8px 10px';
+    paginationDebugBadge.style.borderRadius = '10px';
+    paginationDebugBadge.style.background = 'rgba(28, 22, 18, 0.92)';
+    paginationDebugBadge.style.color = '#fff';
+    paginationDebugBadge.style.fontSize = '12px';
+    paginationDebugBadge.style.lineHeight = '1.3';
+    paginationDebugBadge.style.maxWidth = '360px';
+    paginationDebugBadge.style.pointerEvents = 'none';
+    paginationDebugBadge.textContent = 'pagination debug: ready';
+    document.body.appendChild(paginationDebugBadge);
 
     container.addEventListener('mousemove', event => {
         const topEl = document.elementFromPoint(event.clientX, event.clientY);
-        badge.textContent = `pagination debug: top=${describeElement(topEl)} target=${describeElement(event.target)}`;
+        setPaginationDebug(`hover: top=${describeElement(topEl)} target=${describeElement(event.target)}`);
     });
+}
 
-    container.addEventListener('click', event => {
-        const topEl = document.elementFromPoint(event.clientX, event.clientY);
-        badge.textContent = `pagination click: top=${describeElement(topEl)} target=${describeElement(event.target)}`;
-    });
+function setPaginationDebug(text) {
+    if (paginationDebugBadge) {
+        paginationDebugBadge.textContent = text;
+    }
 }
 
 function describeElement(element) {

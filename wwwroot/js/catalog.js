@@ -7,8 +7,6 @@ const state = {
     currentPage: 1
 };
 
-const previewCache = new Map();
-
 const presetConfigs = {
     all: {
         query: '',
@@ -300,22 +298,12 @@ function renderRecipes(recipes) {
         const recipeUrl = getRecipeUrl(recipe);
         const card = document.createElement('article');
         card.className = 'recipe-card-wrapper';
-        card.dataset.recipeId = String(recipe.id);
         if (recipeUrl) {
             card.style.cursor = 'pointer';
         }
 
-        const front = document.createElement('div');
-        front.className = 'recipe-card-face recipe-card-front';
-
-        const back = document.createElement('div');
-        back.className = 'recipe-card-face recipe-card-back';
-        back.innerHTML = `
-            <h4></h4>
-            <div class="catalog-hover-badges"></div>
-            <p class="catalog-hover-meta"></p>
-            <p class="catalog-hover-description"></p>
-        `;
+        const content = document.createElement('div');
+        content.className = 'recipe-compact-card';
 
         const image = document.createElement('img');
         image.src = recipe.imageFileName && recipe.imageFileName.startsWith('https://')
@@ -331,21 +319,11 @@ function renderRecipes(recipes) {
         title.className = 'recipe-compact-title';
         title.textContent = recipe.name;
 
-        front.appendChild(image);
-        front.appendChild(kicker);
-        front.appendChild(title);
+        content.appendChild(image);
+        content.appendChild(kicker);
+        content.appendChild(title);
 
-        card.appendChild(front);
-        card.appendChild(back);
-
-        card.addEventListener('mouseenter', () => {
-            card.classList.add('is-hovered');
-            loadRecipePreview(card, recipe.id);
-        });
-
-        card.addEventListener('mouseleave', () => {
-            card.classList.remove('is-hovered');
-        });
+        card.appendChild(content);
 
         if (recipeUrl) {
             card.addEventListener('click', () => {
@@ -359,51 +337,6 @@ function renderRecipes(recipes) {
 
 function updateRecipesCount(count) {
     document.getElementById('recipesCount').textContent = `Найдено рецептов: ${count}`;
-}
-
-async function loadRecipePreview(card, recipeId) {
-    const back = card.querySelector('.recipe-card-back');
-    if (!back) return;
-
-    if (previewCache.has(recipeId)) {
-        applyPreviewContent(back, previewCache.get(recipeId));
-        return;
-    }
-
-    back.classList.add('is-loading');
-
-    try {
-        const response = await fetch(`/api/recipe/${recipeId}/preview`);
-        const result = await response.json();
-
-        if (!response.ok || !result.success) {
-            throw new Error(result.message || 'Не удалось загрузить описание');
-        }
-
-        previewCache.set(recipeId, result.data);
-        applyPreviewContent(back, result.data);
-    } catch (error) {
-        console.error('Error loading preview:', error);
-    } finally {
-        back.classList.remove('is-loading');
-    }
-}
-
-function applyPreviewContent(overlay, data) {
-    overlay.querySelector('h4').textContent = data.name;
-
-    const badges = overlay.querySelector('.catalog-hover-badges');
-    badges.innerHTML = `
-        <span class="catalog-hover-badge">${data.category}</span>
-        <span class="catalog-hover-badge">${data.cookingTime} мин</span>
-    `;
-
-    overlay.querySelector('.catalog-hover-meta').innerHTML = `
-        <strong>Тип блюда:</strong> ${data.category}<br>
-        <strong>Время:</strong> ${data.cookingTime} мин
-    `;
-
-    overlay.querySelector('.catalog-hover-description').textContent = data.description;
 }
 
 function renderPagination(currentPage, totalPages) {

@@ -522,11 +522,29 @@ input[type="submit"],
 .star-rating span.hovered { color: #c57b25; }
 
 .catalog-pagination {
+  position: relative;
+  z-index: 5;
+  isolation: isolate;
   display: flex;
   gap: 10px;
   justify-content: center;
   flex-wrap: wrap;
   margin-top: 28px;
+  pointer-events: auto;
+}
+
+.catalog-pagination .page-btn {
+  position: relative;
+  z-index: 6;
+  pointer-events: auto;
+  cursor: pointer;
+  border: 1px solid rgba(81, 49, 18, 0.12);
+  min-width: 44px;
+}
+
+.catalog-pagination .page-btn:disabled {
+  cursor: default;
+  opacity: 0.45;
 }
 
 .page-btn.active {

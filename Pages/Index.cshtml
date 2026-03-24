@@ -59,12 +59,12 @@
         <p class="eyebrow">Рецепты</p>
         <h2>Новая базовая подборка без служебных блоков и второстепенных сценариев</h2>
     </div>
-    <div class="recipe-teaser-grid">
+    <div class="editorial-grid">
         @foreach (var recipe in Model.Home.NewestRecipes)
         {
-            <a class="recipe-teaser" asp-page="@(recipe.ActionName == "Recipe" ? "/Recipe" : "/InDevelopment")" asp-route-slug="@recipe.Slug">
+            <a class="editorial-card" asp-page="@(recipe.ActionName == "Recipe" ? "/Recipe" : "/InDevelopment")" asp-route-slug="@recipe.Slug">
                 <img src="@recipe.ImageSrc" alt="@recipe.Name" />
-                <div>
+                <div class="editorial-card-body">
                     <p class="card-kicker">Рецепт</p>
                     <h3>@recipe.Name</h3>
                 </div>

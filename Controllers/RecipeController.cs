@@ -185,6 +185,39 @@ namespace WebApplication.Controllers
             }
         }
 
+        [HttpGet("{id:int}/preview")]
+        public async Task<IActionResult> GetPreview(int id)
+        {
+            try
+            {
+                var recipe = await _context.Recipes
+                    .Include(r => r.Category)
+                    .FirstOrDefaultAsync(r => r.Id == id);
+
+                if (recipe == null)
+                {
+                    return NotFound(new { success = false, message = "Рецепт не найден." });
+                }
+
+                return Ok(new
+                {
+                    success = true,
+                    data = new
+                    {
+                        recipe.Id,
+                        Name = recipe.Name ?? string.Empty,
+                        Category = recipe.Category?.DisplayName ?? "Не указан",
+                        recipe.CookingTime,
+                        Description = recipe.Description ?? string.Empty
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = ex.Message });
+            }
+        }
+
         [HttpGet("suggestions")]
         public async Task<IActionResult> GetSuggestions([FromQuery] string query = "")
         {

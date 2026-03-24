@@ -39,16 +39,16 @@ internal static class RecipeApiHelpers
         if (c == "drinks")
             return 4;
 
-        if (c.Contains("РїРµСЂРІ") || c.Contains("СЃСѓРї") || c.Contains("Р±СѓР»СЊРѕРЅ"))
+        if (c.Contains("перв") || c.Contains("суп") || c.Contains("бульон"))
             return 1;
 
-        if (c.Contains("РІС‹РїРµС‡") || c.Contains("РїРёСЂРѕРі") || c.Contains("РґРµСЃРµСЂС‚"))
+        if (c.Contains("выпеч") || c.Contains("пирог") || c.Contains("десерт"))
             return 3;
 
-        if (c.Contains("РЅР°РїРёС‚") || c.Contains("С‡Р°Р№") || c.Contains("РєРѕС„Рµ") || c.Contains("РєРѕРјРїРѕС‚") || c.Contains("Р»РёРјРѕРЅР°Рґ"))
+        if (c.Contains("напит") || c.Contains("чай") || c.Contains("кофе") || c.Contains("компот") || c.Contains("лимонад"))
             return 4;
 
-        if (c.Contains("Р·Р°РІС‚"))
+        if (c.Contains("завт"))
             return 2;
 
         return 2;
@@ -63,16 +63,16 @@ internal static class RecipeApiHelpers
 
         return normalized switch
         {
-            var s when s.Contains("РєСѓСЂ") => "РљСѓСЂРёС†Р°",
-            var s when s.Contains("РєР°СЂС‚РѕС„") => "РљР°СЂС‚РѕС„РµР»СЊ",
-            var s when s.Contains("С‚С‹РєРІ") => "РўС‹РєРІР°",
-            var s when s.Contains("С‚РІРѕСЂРѕРі") => "РўРІРѕСЂРѕРі",
-            var s when s.Contains("РІР°СЂРµРЅСЊ") => "Р’Р°СЂРµРЅСЊРµ",
-            var s when s.Contains("СЂРёСЃ") => "Р РёСЃ",
-            var s when s.Contains("РїРѕРјРёРґРѕСЂ") || s.Contains("С‚РѕРјР°С‚") => "РўРѕРјР°С‚С‹",
-            var s when s.Contains("СЏРіРѕРґ") => "РЇРіРѕРґС‹",
-            var s when s.Contains("Р»РёРјРѕРЅ") => "Р›РёРјРѕРЅ",
-            var s when s.Contains("С„РµС‚") => "Р¤РµС‚Р°",
+            var s when s.Contains("кур") => "Курица",
+            var s when s.Contains("картоф") => "Картофель",
+            var s when s.Contains("тыкв") => "Тыква",
+            var s when s.Contains("творог") => "Творог",
+            var s when s.Contains("варень") => "Варенье",
+            var s when s.Contains("рис") => "Рис",
+            var s when s.Contains("помидор") || s.Contains("томат") => "Томаты",
+            var s when s.Contains("ягод") => "Ягоды",
+            var s when s.Contains("лимон") => "Лимон",
+            var s when s.Contains("фет") => "Фета",
             _ => string.Empty
         };
     }

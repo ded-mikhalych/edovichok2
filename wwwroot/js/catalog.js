@@ -230,7 +230,7 @@ async function loadRecipes() {
         const pagination = document.getElementById('pagination');
 
         if (cards) {
-            cards.innerHTML = '<article class="catalog-empty"><p class="card-kicker">РћС€РёР±РєР°</p><h3>РќРµ СѓРґР°Р»РѕСЃСЊ Р·Р°РіСЂСѓР·РёС‚СЊ СЂРµС†РµРїС‚С‹.</h3><p>РџРѕРїСЂРѕР±СѓР№С‚Рµ РѕР±РЅРѕРІРёС‚СЊ СЃС‚СЂР°РЅРёС†Сѓ РЅРµРјРЅРѕРіРѕ РїРѕР·Р¶Рµ.</p></article>';
+            cards.innerHTML = '<article class="catalog-empty"><p class="card-kicker">Ошибка</p><h3>Не удалось загрузить рецепты.</h3><p>Попробуйте обновить страницу немного позже.</p></article>';
         }
 
         if (pagination) {
@@ -314,7 +314,7 @@ async function renderViewHistory() {
 
             const kicker = document.createElement('p');
             kicker.className = 'card-kicker';
-            kicker.textContent = recipe.category || 'Р РµС†РµРїС‚';
+            kicker.textContent = recipe.category || 'Рецепт';
 
             const title = document.createElement('h4');
             title.textContent = recipe.name;
@@ -341,7 +341,7 @@ function renderRecipes(recipes) {
     container.innerHTML = '';
 
     if (recipes.length === 0) {
-        container.innerHTML = '<article class="catalog-empty"><p class="card-kicker">РџСѓСЃС‚РѕР№ СЂРµР·СѓР»СЊС‚Р°С‚</p><h3>РџРѕ СЌС‚РѕРјСѓ СЃРѕС‡РµС‚Р°РЅРёСЋ С„РёР»СЊС‚СЂРѕРІ РїРѕРєР° РЅРёС‡РµРіРѕ РЅРµ РЅР°Р№РґРµРЅРѕ.</h3><p>РџРѕРїСЂРѕР±СѓР№С‚Рµ СЃРЅСЏС‚СЊ С‡Р°СЃС‚СЊ РѕРіСЂР°РЅРёС‡РµРЅРёР№ РёР»Рё РІС‹Р±СЂР°С‚СЊ РґСЂСѓРіРѕР№ РёРЅРіСЂРµРґРёРµРЅС‚.</p></article>';
+        container.innerHTML = '<article class="catalog-empty"><p class="card-kicker">Пустой результат</p><h3>По этому сочетанию фильтров пока ничего не найдено.</h3><p>Попробуйте снять часть ограничений или выбрать другой ингредиент.</p></article>';
         return;
     }
 
@@ -363,7 +363,7 @@ function renderRecipes(recipes) {
 
         const kicker = document.createElement('p');
         kicker.className = 'card-kicker';
-        kicker.textContent = recipe.category || 'Р РµС†РµРїС‚';
+        kicker.textContent = recipe.category || 'Рецепт';
 
         const title = document.createElement('h3');
         title.textContent = recipe.name;

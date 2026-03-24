@@ -25,17 +25,17 @@ public class IndexModel : PageModel
     {
         if (string.IsNullOrWhiteSpace(request.Title) || request.Title.Trim().Length < 3)
         {
-            return new JsonResult(new { success = false, message = "РќР°Р·РІР°РЅРёРµ РґРѕР»Р¶РЅРѕ СЃРѕРґРµСЂР¶Р°С‚СЊ РјРёРЅРёРјСѓРј 3 СЃРёРјРІРѕР»Р°." }) { StatusCode = 400 };
+            return new JsonResult(new { success = false, message = "Название должно содержать минимум 3 символа." }) { StatusCode = 400 };
         }
 
         if (string.IsNullOrWhiteSpace(request.Description) || request.Description.Trim().Length < 10)
         {
-            return new JsonResult(new { success = false, message = "РћРїРёСЃР°РЅРёРµ РґРѕР»Р¶РЅРѕ СЃРѕРґРµСЂР¶Р°С‚СЊ РјРёРЅРёРјСѓРј 10 СЃРёРјРІРѕР»РѕРІ." }) { StatusCode = 400 };
+            return new JsonResult(new { success = false, message = "Описание должно содержать минимум 10 символов." }) { StatusCode = 400 };
         }
 
         if (request.Difficulty < 1 || request.Difficulty > 3)
         {
-            return new JsonResult(new { success = false, message = "Р’С‹Р±РµСЂРёС‚Рµ РєРѕСЂСЂРµРєС‚РЅСѓСЋ СЃР»РѕР¶РЅРѕСЃС‚СЊ." }) { StatusCode = 400 };
+            return new JsonResult(new { success = false, message = "Выберите корректную сложность." }) { StatusCode = 400 };
         }
 
         var ingredients = request.Ingredients
@@ -50,12 +50,12 @@ public class IndexModel : PageModel
 
         if (ingredients.Count == 0)
         {
-            return new JsonResult(new { success = false, message = "Р”РѕР±Р°РІСЊС‚Рµ С…РѕС‚СЏ Р±С‹ РѕРґРёРЅ РёРЅРіСЂРµРґРёРµРЅС‚." }) { StatusCode = 400 };
+            return new JsonResult(new { success = false, message = "Добавьте хотя бы один ингредиент." }) { StatusCode = 400 };
         }
 
         if (steps.Count == 0)
         {
-            return new JsonResult(new { success = false, message = "Р”РѕР±Р°РІСЊС‚Рµ С…РѕС‚СЏ Р±С‹ РѕРґРёРЅ С€Р°Рі." }) { StatusCode = 400 };
+            return new JsonResult(new { success = false, message = "Добавьте хотя бы один шаг." }) { StatusCode = 400 };
         }
 
         await RecipeApiHelpers.SyncPrimaryKeySequencesAsync(_context);
@@ -103,7 +103,7 @@ public class IndexModel : PageModel
         return new JsonResult(new
         {
             success = true,
-            message = "Р РµС†РµРїС‚ СѓСЃРїРµС€РЅРѕ СЃРѕС…СЂР°РЅС‘РЅ.",
+            message = "Рецепт успешно сохранён.",
             data = new
             {
                 recipe.Id,

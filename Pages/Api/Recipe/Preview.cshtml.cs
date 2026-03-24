@@ -24,7 +24,7 @@ public class PreviewModel : PageModel
 
             if (recipe == null)
             {
-                return new JsonResult(new { success = false, message = "Р РµС†РµРїС‚ РЅРµ РЅР°Р№РґРµРЅ." }) { StatusCode = 404 };
+                return new JsonResult(new { success = false, message = "Рецепт не найден." }) { StatusCode = 404 };
             }
 
             return new JsonResult(new
@@ -35,7 +35,7 @@ public class PreviewModel : PageModel
                     recipe.Id,
                     recipe.Slug,
                     Name = recipe.Name ?? string.Empty,
-                    Category = recipe.Category?.DisplayName ?? "РќРµ СѓРєР°Р·Р°РЅ",
+                    Category = recipe.Category?.DisplayName ?? "Не указан",
                     recipe.CookingTime,
                     Description = recipe.Description ?? string.Empty,
                     Ingredients = await _context.RecipeIngredients

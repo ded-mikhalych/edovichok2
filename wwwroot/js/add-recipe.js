@@ -54,7 +54,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const titleInput = recipeForm.querySelector('input[name="title"]');
         const descriptionInput = recipeForm.querySelector('textarea[name="description"]');
         const authorInput = recipeForm.querySelector('input[name="author"]');
-        const cuisineInput = recipeForm.querySelector('input[name="cuisine"]');
+        const cuisineInput = recipeForm.querySelector('select[name="cuisine"]');
         const difficultyInput = recipeForm.querySelector('select[name="difficulty"]');
         const mainImageInput = recipeForm.querySelector('#recipeImage');
 
@@ -102,7 +102,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             alert('Рецепт успешно сохранён');
             if (result.data?.slug) {
-                window.location.href = `/home/recipe/${encodeURIComponent(result.data.slug)}`;
+                window.location.href = `/recipe/${encodeURIComponent(result.data.slug)}`;
                 return;
             }
 

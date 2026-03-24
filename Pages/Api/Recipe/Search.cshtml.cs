@@ -18,6 +18,9 @@ public class SearchModel : PageModel
     {
         try
         {
+            var normalizedPageSize = Math.Clamp(pageSize, 1, 24);
+            var normalizedPage = Math.Max(page, 1);
+
             var recipesQuery = _context.Recipes
                 .Include(r => r.Category)
                 .Include(r => r.Ingredients)
@@ -57,11 +60,18 @@ public class SearchModel : PageModel
             }
 
             var totalCount = recipes.Count;
-            var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
+            var totalPages = totalCount == 0
+                ? 0
+                : (int)Math.Ceiling(totalCount / (double)normalizedPageSize);
+
+            if (totalPages > 0 && normalizedPage > totalPages)
+            {
+                normalizedPage = totalPages;
+            }
 
             var pagedRecipes = recipes
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
+                .Skip((normalizedPage - 1) * normalizedPageSize)
+                .Take(normalizedPageSize)
                 .Select(r => new
                 {
                     r.Id,
@@ -80,8 +90,8 @@ public class SearchModel : PageModel
                 success = true,
                 data = pagedRecipes,
                 count = totalCount,
-                page,
-                pageSize,
+                page = normalizedPage,
+                pageSize = normalizedPageSize,
                 totalPages
             });
         }

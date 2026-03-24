@@ -10,6 +10,8 @@ const state = {
     currentPage: 1
 };
 
+let activeRecipesRequestId = 0;
+
 document.addEventListener('DOMContentLoaded', async () => {
     await renderViewHistory();
     await loadFilters();
@@ -227,6 +229,8 @@ function updateSelectedFilters() {
 }
 
 async function loadRecipes() {
+    const requestId = ++activeRecipesRequestId;
+
     try {
         updateSelectedFilters();
 
@@ -240,12 +244,21 @@ async function loadRecipes() {
         const response = await fetch(`/api/recipe/search?${params.toString()}`);
         const result = await response.json();
 
+        if (requestId !== activeRecipesRequestId) {
+            return;
+        }
+
         if (result.success) {
+            state.currentPage = Number.isFinite(result.page) ? result.page : state.currentPage;
             renderRecipes(result.data);
             updateRecipesCount(result.count);
             renderPagination(result.page, result.totalPages);
         }
     } catch (error) {
+        if (requestId !== activeRecipesRequestId) {
+            return;
+        }
+
         console.error('Error loading recipes:', error);
         document.getElementById('cards').innerHTML = '<article class="catalog-empty"><p class="card-kicker">Ошибка</p><h3>Не удалось загрузить рецепты.</h3><p>Попробуйте обновить страницу немного позже.</p></article>';
         document.getElementById('pagination').innerHTML = '';
@@ -440,8 +453,22 @@ function renderPagination(currentPage, totalPages) {
         return;
     }
 
+    const previousButton = document.createElement('button');
+    previousButton.type = 'button';
+    previousButton.className = 'page-btn';
+    previousButton.textContent = '←';
+    previousButton.disabled = currentPage <= 1;
+    previousButton.addEventListener('click', () => {
+        if (state.currentPage > 1) {
+            state.currentPage -= 1;
+            loadRecipes();
+        }
+    });
+    container.appendChild(previousButton);
+
     for (let page = 1; page <= totalPages; page++) {
         const button = document.createElement('button');
+        button.type = 'button';
         button.className = 'page-btn' + (page === currentPage ? ' active' : '');
         button.textContent = page;
         button.addEventListener('click', () => {
@@ -452,6 +479,19 @@ function renderPagination(currentPage, totalPages) {
         });
         container.appendChild(button);
     }
+
+    const nextButton = document.createElement('button');
+    nextButton.type = 'button';
+    nextButton.className = 'page-btn';
+    nextButton.textContent = '→';
+    nextButton.disabled = currentPage >= totalPages;
+    nextButton.addEventListener('click', () => {
+        if (state.currentPage < totalPages) {
+            state.currentPage += 1;
+            loadRecipes();
+        }
+    });
+    container.appendChild(nextButton);
 }
 
 document.addEventListener('click', event => {

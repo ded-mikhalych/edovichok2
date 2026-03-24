@@ -149,10 +149,13 @@ public class SiteContentService
             return DefaultExternalImage;
         }
 
-        return imageFileName.StartsWith("data:image/", StringComparison.OrdinalIgnoreCase) ||
-               imageFileName.StartsWith("https://", StringComparison.OrdinalIgnoreCase)
-            ? imageFileName
-            : $"/images/{imageFileName}";
+        if (imageFileName.StartsWith("data:image/", StringComparison.OrdinalIgnoreCase) ||
+            imageFileName.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+        {
+            return imageFileName;
+        }
+
+        return $"/images/{imageFileName}";
     }
 
     public static string GetDifficultyText(int difficulty)

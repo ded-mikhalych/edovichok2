@@ -20,71 +20,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     await loadRecipes();
 });
 
-async function loadFilters() {
-    try {
-        const response = await fetch('/api/recipe/filters');
-        const result = await response.json();
-        if (!result.success) {
-            return;
-        }
-
-        renderCategories(result.categories || []);
-        renderIngredients(result.ingredients || []);
-    } catch (error) {
-        console.error('Error loading filters:', error);
-    }
-}
-
-function renderCategories(categories) {
-    const container = document.getElementById('categoriesContainer');
-    container.innerHTML = '';
-
-    categories.forEach(category => {
-        const label = document.createElement('label');
-        label.className = 'filter-option';
-
-        const input = document.createElement('input');
-        input.type = 'checkbox';
-        input.value = category.name;
-        input.className = 'category-filter';
-
-        const text = document.createElement('span');
-        text.textContent = category.displayName;
-
-        label.appendChild(input);
-        label.appendChild(text);
-        container.appendChild(label);
-    });
-}
-
-function renderIngredients(ingredients) {
-    const container = document.getElementById('ingredientsContainer');
-    container.innerHTML = '';
-
-    ingredients.forEach(ingredient => {
-        const label = document.createElement('label');
-        label.className = 'filter-option';
-
-        const input = document.createElement('input');
-        input.type = 'checkbox';
-        input.value = ingredient.name;
-        input.className = 'ingredient-filter';
-
-        const text = document.createElement('span');
-        text.textContent = ingredient.name;
-
-        label.appendChild(input);
-        label.appendChild(text);
-        container.appendChild(label);
-    });
-}
-
 function setupEventListeners() {
     const searchInput = document.getElementById('searchInput');
     const clearHistoryBtn = document.getElementById('clearHistoryBtn');
+    const applyBtn = document.getElementById('applyBtn');
+    const resetBtn = document.getElementById('resetBtn');
     let searchTimeout;
 
-    searchInput.addEventListener('input', event => {
+    searchInput?.addEventListener('input', event => {
         const query = event.target.value.trim();
         clearTimeout(searchTimeout);
 
@@ -96,23 +39,24 @@ function setupEventListeners() {
                 updateCatalogSummary();
                 loadRecipes();
             }, 250);
-        } else {
-            hideSuggestions();
-            state.searchQuery = '';
-            state.currentPage = 1;
-            updateCatalogSummary();
-            loadRecipes();
+            return;
         }
+
+        hideSuggestions();
+        state.searchQuery = '';
+        state.currentPage = 1;
+        updateCatalogSummary();
+        loadRecipes();
     });
 
-    document.getElementById('applyBtn').addEventListener('click', () => {
+    applyBtn?.addEventListener('click', () => {
         updateSelectedFilters();
         state.currentPage = 1;
         updateCatalogSummary();
         loadRecipes();
     });
 
-    document.getElementById('resetBtn').addEventListener('click', () => {
+    resetBtn?.addEventListener('click', () => {
         resetFilters();
         updateCatalogSummary();
         loadRecipes();
@@ -135,12 +79,57 @@ function setupEventListeners() {
     });
 }
 
+async function loadFilters() {
+    try {
+        const response = await fetch('/api/recipe/filters');
+        const result = await response.json();
+        if (!result.success) {
+            return;
+        }
+
+        renderFilterOptions('categoriesContainer', result.categories || [], item => item.name, item => item.displayName, 'category-filter');
+        renderFilterOptions('ingredientsContainer', result.ingredients || [], item => item.name, item => item.name, 'ingredient-filter');
+    } catch (error) {
+        console.error('Error loading filters:', error);
+    }
+}
+
+function renderFilterOptions(containerId, items, valueSelector, textSelector, inputClass) {
+    const container = document.getElementById(containerId);
+    if (!container) {
+        return;
+    }
+
+    container.innerHTML = '';
+
+    items.forEach(item => {
+        const label = document.createElement('label');
+        label.className = 'filter-option';
+
+        const input = document.createElement('input');
+        input.type = 'checkbox';
+        input.value = valueSelector(item);
+        input.className = inputClass;
+
+        const text = document.createElement('span');
+        text.textContent = textSelector(item);
+
+        label.appendChild(input);
+        label.appendChild(text);
+        container.appendChild(label);
+    });
+}
+
 function resetFilters() {
     document.querySelectorAll('.category-filter, .ingredient-filter').forEach(el => {
         el.checked = false;
     });
 
-    document.getElementById('searchInput').value = '';
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) {
+        searchInput.value = '';
+    }
+
     state.searchQuery = '';
     state.selectedCategories = [];
     state.selectedIngredients = [];
@@ -155,18 +144,9 @@ function updateCatalogSummary() {
     }
 
     const parts = [];
-
-    if (state.searchQuery) {
-        parts.push(`поиск: ${state.searchQuery}`);
-    }
-
-    if (state.selectedCategories.length > 0) {
-        parts.push(`тип блюда: ${state.selectedCategories.length}`);
-    }
-
-    if (state.selectedIngredients.length > 0) {
-        parts.push(`ингредиенты: ${state.selectedIngredients.length}`);
-    }
+    if (state.searchQuery) parts.push(`поиск: ${state.searchQuery}`);
+    if (state.selectedCategories.length > 0) parts.push(`тип блюда: ${state.selectedCategories.length}`);
+    if (state.selectedIngredients.length > 0) parts.push(`ингредиенты: ${state.selectedIngredients.length}`);
 
     summary.textContent = parts.length > 0
         ? `Активные параметры: ${parts.join(' • ')}.`
@@ -180,9 +160,10 @@ async function getSearchSuggestions(query) {
 
         if (result.success && result.data.length > 0) {
             renderSuggestions(result.data);
-        } else {
-            hideSuggestions();
+            return;
         }
+
+        hideSuggestions();
     } catch (error) {
         console.error('Error fetching suggestions:', error);
     }
@@ -190,7 +171,9 @@ async function getSearchSuggestions(query) {
 
 function renderSuggestions(suggestions) {
     const list = document.getElementById('suggestionsList');
-    list.innerHTML = '';
+    if (!list) {
+        return;
+    }
 
     const typeLabels = {
         category: 'тип блюда',
@@ -198,12 +181,18 @@ function renderSuggestions(suggestions) {
         recipe: 'рецепт'
     };
 
+    list.innerHTML = '';
+
     suggestions.forEach(suggestion => {
         const item = document.createElement('li');
         item.className = 'suggestion-item';
         item.textContent = `${suggestion.name} (${typeLabels[suggestion.type] || 'совпадение'})`;
         item.addEventListener('click', () => {
-            document.getElementById('searchInput').value = suggestion.name;
+            const searchInput = document.getElementById('searchInput');
+            if (searchInput) {
+                searchInput.value = suggestion.name;
+            }
+
             state.searchQuery = suggestion.name;
             state.currentPage = 1;
             hideSuggestions();
@@ -240,19 +229,17 @@ async function loadRecipes() {
     try {
         const params = new URLSearchParams();
         if (state.searchQuery) params.append('query', state.searchQuery);
-        state.selectedCategories.forEach(cat => params.append('categories', cat));
-        state.selectedIngredients.forEach(ingredient => params.append('ingredients', ingredient));
+        state.selectedCategories.forEach(value => params.append('categories', value));
+        state.selectedIngredients.forEach(value => params.append('ingredients', value));
         params.append('currentPage', String(state.currentPage));
         params.append('pageSize', String(PAGE_SIZE));
 
         const response = await fetch(`/api/recipe/search?${params.toString()}`, {
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest'
-            },
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
             signal: recipesAbortController.signal
         });
-        const result = await response.json();
 
+        const result = await response.json();
         if (!result.success) {
             throw new Error(result.message || 'Search request failed.');
         }
@@ -267,14 +254,21 @@ async function loadRecipes() {
         }
 
         console.error('Error loading recipes:', error);
-        document.getElementById('cards').innerHTML = '<article class="catalog-empty"><p class="card-kicker">Ошибка</p><h3>Не удалось загрузить рецепты.</h3><p>Попробуйте обновить страницу немного позже.</p></article>';
-        document.getElementById('pagination').innerHTML = '';
+        const cards = document.getElementById('cards');
+        const pagination = document.getElementById('pagination');
+
+        if (cards) {
+            cards.innerHTML = '<article class="catalog-empty"><p class="card-kicker">Ошибка</p><h3>Не удалось загрузить рецепты.</h3><p>Попробуйте обновить страницу немного позже.</p></article>';
+        }
+
+        if (pagination) {
+            pagination.innerHTML = '';
+        }
     }
 }
 
 function getRecipeUrl(recipe) {
-    if (!recipe.slug) return null;
-    return `/recipe/${encodeURIComponent(recipe.slug)}`;
+    return recipe.slug ? `/recipe/${encodeURIComponent(recipe.slug)}` : null;
 }
 
 function getRecipeImageSrc(imageFileName) {
@@ -282,7 +276,7 @@ function getRecipeImageSrc(imageFileName) {
         return DEFAULT_EXTERNAL_IMAGE;
     }
 
-    return imageFileName.startsWith('https://')
+    return imageFileName.startsWith('data:image/') || imageFileName.startsWith('https://')
         ? imageFileName
         : `/images/${imageFileName}`;
 }
@@ -299,9 +293,7 @@ function getClientKey() {
 }
 
 function getClientHeaders() {
-    return {
-        'X-Client-Key': getClientKey()
-    };
+    return { 'X-Client-Key': getClientKey() };
 }
 
 async function saveViewedRecipe(recipe) {
@@ -322,26 +314,11 @@ async function saveViewedRecipe(recipe) {
 async function renderViewHistory() {
     const section = document.getElementById('viewHistorySection');
     const container = document.getElementById('viewHistoryCards');
-
     if (!section || !container) {
         return;
     }
 
     try {
-        section.style.padding = '28px';
-        section.style.background = '#fff';
-        section.style.border = '1px solid rgba(93, 58, 27, 0.1)';
-        section.style.borderRadius = '28px';
-        section.style.boxShadow = '0 18px 40px rgba(84, 50, 23, 0.08)';
-        section.style.marginTop = '28px';
-
-        container.style.display = 'flex';
-        container.style.flexWrap = 'nowrap';
-        container.style.alignItems = 'stretch';
-        container.style.gap = '8px';
-        container.style.overflowX = 'auto';
-        container.style.overflowY = 'hidden';
-
         const response = await fetch(`/api/recipe/history?limit=${VIEW_HISTORY_LIMIT}`, {
             headers: getClientHeaders()
         });
@@ -352,16 +329,9 @@ async function renderViewHistory() {
         container.innerHTML = '';
 
         history.forEach(recipe => {
-            const item = {
-                slug: recipe.slug,
-                name: recipe.name,
-                imageFileName: recipe.imageFileName,
-                category: recipe.category || 'Рецепт'
-            };
-
             const card = document.createElement('a');
             card.className = 'catalog-history-card';
-            card.href = getRecipeUrl(item) ?? '/in-development';
+            card.href = getRecipeUrl(recipe) ?? '/in-development';
             card.style.display = 'block';
             card.style.flex = '0 0 136px';
             card.style.width = '136px';
@@ -369,8 +339,8 @@ async function renderViewHistory() {
             card.style.maxWidth = '136px';
 
             const image = document.createElement('img');
-            image.src = getRecipeImageSrc(item.imageFileName);
-            image.alt = item.name;
+            image.src = getRecipeImageSrc(recipe.imageFileName);
+            image.alt = recipe.name;
             image.style.width = '100%';
             image.style.height = '76px';
             image.style.objectFit = 'cover';
@@ -382,13 +352,13 @@ async function renderViewHistory() {
 
             const kicker = document.createElement('p');
             kicker.className = 'card-kicker';
-            kicker.textContent = item.category;
+            kicker.textContent = recipe.category || 'Рецепт';
             kicker.style.margin = '0 0 3px';
             kicker.style.fontSize = '0.68rem';
             kicker.style.lineHeight = '1.15';
 
             const title = document.createElement('h4');
-            title.textContent = item.name;
+            title.textContent = recipe.name;
             title.style.margin = '0';
             title.style.fontSize = '0.76rem';
             title.style.lineHeight = '1.22';
@@ -408,6 +378,10 @@ async function renderViewHistory() {
 
 function renderRecipes(recipes) {
     const container = document.getElementById('cards');
+    if (!container) {
+        return;
+    }
+
     container.innerHTML = '';
 
     if (recipes.length === 0) {
@@ -416,10 +390,9 @@ function renderRecipes(recipes) {
     }
 
     recipes.forEach(recipe => {
-        const recipeUrl = getRecipeUrl(recipe);
         const card = document.createElement('a');
         card.className = 'editorial-card catalog-editorial-card';
-        card.href = recipeUrl ?? '/in-development';
+        card.href = getRecipeUrl(recipe) ?? '/in-development';
         card.addEventListener('click', async () => {
             await saveViewedRecipe(recipe);
             await renderViewHistory();
@@ -441,7 +414,6 @@ function renderRecipes(recipes) {
 
         body.appendChild(kicker);
         body.appendChild(title);
-
         card.appendChild(image);
         card.appendChild(body);
         container.appendChild(card);
@@ -449,13 +421,19 @@ function renderRecipes(recipes) {
 }
 
 function updateRecipesCount(count) {
-    document.getElementById('recipesCount').textContent = `Найдено рецептов: ${count}`;
+    const counter = document.getElementById('recipesCount');
+    if (counter) {
+        counter.textContent = `Найдено рецептов: ${count}`;
+    }
 }
 
 function renderPagination(currentPage, totalPages) {
     const container = document.getElementById('pagination');
-    container.innerHTML = '';
+    if (!container) {
+        return;
+    }
 
+    container.innerHTML = '';
     if (totalPages <= 1) {
         return;
     }
@@ -475,11 +453,9 @@ function createPaginationButton(label, page, disabled, isActive) {
     button.className = 'page-btn' + (isActive ? ' active' : '');
     button.textContent = label;
     button.disabled = disabled;
-    button.dataset.page = String(page);
+
     button.addEventListener('click', event => {
         event.preventDefault();
-        event.stopPropagation();
-
         if (disabled || page < 1 || page === state.currentPage) {
             return;
         }
@@ -487,6 +463,7 @@ function createPaginationButton(label, page, disabled, isActive) {
         state.currentPage = page;
         loadRecipes();
     });
+
     return button;
 }
 

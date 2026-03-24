@@ -92,6 +92,7 @@
     opacity: 1;
     transform: translateY(0);
     z-index: 2;
+    pointer-events: none;
 }
 
 .recipe-card-back {
@@ -103,12 +104,12 @@
     background: linear-gradient(180deg, #fbf6ef 0%, #f7f0e6 100%);
 }
 
-.recipe-card-wrapper:hover .recipe-card-front {
+.recipe-card-wrapper.is-hovered .recipe-card-front {
     opacity: 0;
     transform: translateY(-8px);
 }
 
-.recipe-card-wrapper:hover .recipe-card-back {
+.recipe-card-wrapper.is-hovered .recipe-card-back {
     opacity: 1;
     transform: translateY(0);
 }

@@ -339,7 +339,12 @@ function renderRecipes(recipes) {
         card.appendChild(back);
 
         card.addEventListener('mouseenter', () => {
+            card.classList.add('is-hovered');
             loadRecipePreview(card, recipe.id);
+        });
+
+        card.addEventListener('mouseleave', () => {
+            card.classList.remove('is-hovered');
         });
 
         if (recipeUrl) {

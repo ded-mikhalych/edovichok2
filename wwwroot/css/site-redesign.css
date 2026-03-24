@@ -545,8 +545,9 @@ input[type="submit"],
   position: relative;
   z-index: 1;
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 18px;
+  align-items: start;
 }
 
 .catalog-card-shell,
@@ -554,9 +555,12 @@ input[type="submit"],
   min-width: 0;
 }
 
+.catalog-card-shell {
+  overflow: visible;
+}
+
 .catalog-editorial-card {
   display: block;
-  height: 100%;
 }
 
 .catalog-summary {

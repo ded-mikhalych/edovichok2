@@ -8,8 +8,6 @@ const state = {
 };
 
 const previewCache = new Map();
-let hoverCard = null;
-let hoverHideTimeout = null;
 
 const presetConfigs = {
     all: {
@@ -46,7 +44,6 @@ const presetConfigs = {
 
 document.addEventListener('DOMContentLoaded', async () => {
     await loadFilters();
-    ensureHoverCard();
     setupEventListeners();
     updateCatalogSummary(presetConfigs.all.summary);
     await loadRecipes();
@@ -311,6 +308,15 @@ function renderRecipes(recipes) {
         const compactCard = document.createElement('div');
         compactCard.className = 'recipe-compact-card';
 
+        const overlay = document.createElement('div');
+        overlay.className = 'recipe-card-overlay';
+        overlay.innerHTML = `
+            <h4></h4>
+            <div class="catalog-hover-badges"></div>
+            <p class="catalog-hover-meta"></p>
+            <p class="catalog-hover-description"></p>
+        `;
+
         const image = document.createElement('img');
         image.src = recipe.imageFileName && recipe.imageFileName.startsWith('https://')
             ? recipe.imageFileName
@@ -330,12 +336,11 @@ function renderRecipes(recipes) {
         compactCard.appendChild(title);
 
         card.appendChild(compactCard);
+        card.appendChild(overlay);
 
         card.addEventListener('mouseenter', () => {
-            showRecipeHover(card, recipe.id);
+            loadRecipePreview(card, recipe.id);
         });
-
-        card.addEventListener('mouseleave', scheduleHideHoverCard);
 
         if (recipeUrl) {
             card.addEventListener('click', () => {
@@ -351,43 +356,16 @@ function updateRecipesCount(count) {
     document.getElementById('recipesCount').textContent = `Найдено рецептов: ${count}`;
 }
 
-function ensureHoverCard() {
-    if (hoverCard) return;
-
-    hoverCard = document.createElement('div');
-    hoverCard.className = 'catalog-hover-card';
-    hoverCard.innerHTML = `
-        <h4></h4>
-        <div class="catalog-hover-badges"></div>
-        <p class="catalog-hover-meta"></p>
-        <p class="catalog-hover-description"></p>
-    `;
-
-    hoverCard.addEventListener('mouseenter', () => {
-        if (hoverHideTimeout) {
-            clearTimeout(hoverHideTimeout);
-            hoverHideTimeout = null;
-        }
-    });
-
-    hoverCard.addEventListener('mouseleave', scheduleHideHoverCard);
-
-    document.body.appendChild(hoverCard);
-}
-
-async function showRecipeHover(card, recipeId) {
-    if (hoverHideTimeout) {
-        clearTimeout(hoverHideTimeout);
-        hoverHideTimeout = null;
-    }
-
-    positionHoverCard(card);
-    hoverCard.classList.add('is-visible');
+async function loadRecipePreview(card, recipeId) {
+    const overlay = card.querySelector('.recipe-card-overlay');
+    if (!overlay) return;
 
     if (previewCache.has(recipeId)) {
-        applyHoverContent(previewCache.get(recipeId));
+        applyPreviewContent(overlay, previewCache.get(recipeId));
         return;
     }
+
+    overlay.classList.add('is-loading');
 
     try {
         const response = await fetch(`/api/recipe/${recipeId}/preview`);
@@ -398,59 +376,29 @@ async function showRecipeHover(card, recipeId) {
         }
 
         previewCache.set(recipeId, result.data);
-        applyHoverContent(result.data);
+        applyPreviewContent(overlay, result.data);
     } catch (error) {
         console.error('Error loading preview:', error);
+    } finally {
+        overlay.classList.remove('is-loading');
     }
 }
 
-function applyHoverContent(data) {
-    if (!hoverCard) return;
+function applyPreviewContent(overlay, data) {
+    overlay.querySelector('h4').textContent = data.name;
 
-    hoverCard.querySelector('h4').textContent = data.name;
-
-    const badges = hoverCard.querySelector('.catalog-hover-badges');
+    const badges = overlay.querySelector('.catalog-hover-badges');
     badges.innerHTML = `
         <span class="catalog-hover-badge">${data.category}</span>
         <span class="catalog-hover-badge">${data.cookingTime} мин</span>
     `;
 
-    hoverCard.querySelector('.catalog-hover-meta').innerHTML = `
+    overlay.querySelector('.catalog-hover-meta').innerHTML = `
         <strong>Тип блюда:</strong> ${data.category}<br>
         <strong>Время:</strong> ${data.cookingTime} мин
     `;
 
-    hoverCard.querySelector('.catalog-hover-description').textContent = data.description;
-}
-
-function positionHoverCard(card) {
-    if (!hoverCard) return;
-
-    const rect = card.getBoundingClientRect();
-    const panelWidth = Math.min(360, window.innerWidth - 32);
-    let left = rect.right + 18;
-    let top = rect.top;
-
-    if (left + panelWidth > window.innerWidth - 16) {
-        left = rect.left - panelWidth - 18;
-    }
-
-    if (left < 16) {
-        left = Math.max(16, rect.left);
-        top = rect.bottom + 12;
-    }
-
-    const maxTop = window.innerHeight - 300;
-    hoverCard.style.left = `${Math.max(16, left)}px`;
-    hoverCard.style.top = `${Math.max(16, Math.min(top, maxTop))}px`;
-}
-
-function scheduleHideHoverCard() {
-    hoverHideTimeout = setTimeout(() => {
-        if (hoverCard) {
-            hoverCard.classList.remove('is-visible');
-        }
-    }, 120);
+    overlay.querySelector('.catalog-hover-description').textContent = data.description;
 }
 
 function renderPagination(currentPage, totalPages) {
@@ -476,17 +424,5 @@ function renderPagination(currentPage, totalPages) {
 document.addEventListener('click', event => {
     if (!event.target.matches('#searchInput')) {
         hideSuggestions();
-    }
-});
-
-window.addEventListener('scroll', () => {
-    if (hoverCard) {
-        hoverCard.classList.remove('is-visible');
-    }
-}, { passive: true });
-
-window.addEventListener('resize', () => {
-    if (hoverCard) {
-        hoverCard.classList.remove('is-visible');
     }
 });

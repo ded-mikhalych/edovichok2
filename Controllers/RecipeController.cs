@@ -10,6 +10,7 @@ namespace WebApplication.Controllers
     [Route("api/[controller]")]
     public class RecipeController : ControllerBase
     {
+        private const string ClientKeyHeaderName = "X-Client-Key";
         private readonly ApplicationDbContext _context;
         private readonly IWebHostEnvironment _environment;
 
@@ -218,6 +219,119 @@ namespace WebApplication.Controllers
                             .ToListAsync()
                     }
                 });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpPost("{id:int}/history")]
+        public async Task<IActionResult> TrackView(int id)
+        {
+            try
+            {
+                var clientKey = GetClientKey();
+                if (string.IsNullOrWhiteSpace(clientKey))
+                {
+                    return BadRequest(new { success = false, message = "Missing client key." });
+                }
+
+                var recipe = await _context.Recipes
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(r => r.Id == id);
+
+                if (recipe == null)
+                {
+                    return NotFound(new { success = false, message = "Recipe not found." });
+                }
+
+                var existingHistory = await _context.RecipeViewHistories
+                    .FirstOrDefaultAsync(h => h.ClientKey == clientKey && h.RecipeId == id);
+
+                if (existingHistory == null)
+                {
+                    _context.RecipeViewHistories.Add(new RecipeViewHistory
+                    {
+                        ClientKey = clientKey,
+                        RecipeId = id,
+                        ViewedAt = DateTime.UtcNow
+                    });
+                }
+                else
+                {
+                    existingHistory.ViewedAt = DateTime.UtcNow;
+                }
+
+                await _context.SaveChangesAsync();
+
+                return Ok(new { success = true });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpGet("history")]
+        public async Task<IActionResult> GetViewHistory([FromQuery] int limit = 6)
+        {
+            try
+            {
+                var clientKey = GetClientKey();
+                if (string.IsNullOrWhiteSpace(clientKey))
+                {
+                    return BadRequest(new { success = false, message = "Missing client key." });
+                }
+
+                var normalizedLimit = Math.Clamp(limit, 1, 12);
+                var history = await _context.RecipeViewHistories
+                    .Where(h => h.ClientKey == clientKey)
+                    .OrderByDescending(h => h.ViewedAt)
+                    .Include(h => h.Recipe)
+                    .ThenInclude(r => r!.Category)
+                    .Take(normalizedLimit)
+                    .Select(h => new
+                    {
+                        h.RecipeId,
+                        Name = h.Recipe!.Name ?? string.Empty,
+                        h.Recipe.Slug,
+                        h.Recipe.ImageFileName,
+                        Category = h.Recipe.Category != null ? h.Recipe.Category.DisplayName : null,
+                        h.ViewedAt
+                    })
+                    .ToListAsync();
+
+                return Ok(new { success = true, data = history });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpDelete("history")]
+        public async Task<IActionResult> ClearViewHistory()
+        {
+            try
+            {
+                var clientKey = GetClientKey();
+                if (string.IsNullOrWhiteSpace(clientKey))
+                {
+                    return BadRequest(new { success = false, message = "Missing client key." });
+                }
+
+                var history = await _context.RecipeViewHistories
+                    .Where(h => h.ClientKey == clientKey)
+                    .ToListAsync();
+
+                if (history.Count > 0)
+                {
+                    _context.RecipeViewHistories.RemoveRange(history);
+                    await _context.SaveChangesAsync();
+                }
+
+                return Ok(new { success = true });
             }
             catch (Exception ex)
             {
@@ -451,6 +565,17 @@ SELECT setval(pg_get_serial_sequence('""Recipes""', 'Id'), COALESCE(MAX(""Id""),
 SELECT setval(pg_get_serial_sequence('""RecipeIngredients""', 'Id'), COALESCE(MAX(""Id""), 1)) FROM ""RecipeIngredients"";
 SELECT setval(pg_get_serial_sequence('""RecipeSteps""', 'Id'), COALESCE(MAX(""Id""), 1)) FROM ""RecipeSteps"";
 ");
+        }
+
+        private string? GetClientKey()
+        {
+            if (!Request.Headers.TryGetValue(ClientKeyHeaderName, out var headerValue))
+            {
+                return null;
+            }
+
+            var clientKey = headerValue.ToString().Trim();
+            return string.IsNullOrWhiteSpace(clientKey) ? null : clientKey;
         }
     }
 }

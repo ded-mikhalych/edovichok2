@@ -14,6 +14,7 @@ namespace WebApplication.Data
         public DbSet<Recipe> Recipes { get; set; }
         public DbSet<RecipeIngredient> RecipeIngredients { get; set; }
         public DbSet<RecipeStep> RecipeSteps { get; set; }
+        public DbSet<RecipeViewHistory> RecipeViewHistories { get; set; }
         public DbSet<News> News { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -42,6 +43,16 @@ namespace WebApplication.Data
                 .WithMany(r => r.Steps)
                 .HasForeignKey(s => s.RecipeId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<RecipeViewHistory>()
+                .HasOne(h => h.Recipe)
+                .WithMany()
+                .HasForeignKey(h => h.RecipeId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<RecipeViewHistory>()
+                .HasIndex(h => new { h.ClientKey, h.RecipeId })
+                .IsUnique();
 
             // Recipes seed data
             var recipes = new Recipe[]

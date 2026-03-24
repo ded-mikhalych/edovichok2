@@ -1,5 +1,5 @@
 const PAGE_SIZE = 6;
-const VIEW_HISTORY_KEY = 'recipe-view-history';
+const VIEW_HISTORY_CLIENT_KEY = 'recipe-history-client-key';
 const VIEW_HISTORY_LIMIT = 6;
 
 const state = {
@@ -10,7 +10,7 @@ const state = {
 };
 
 document.addEventListener('DOMContentLoaded', async () => {
-    renderViewHistory();
+    await renderViewHistory();
     await loadFilters();
     setupEventListeners();
     updateCatalogSummary();
@@ -115,9 +115,20 @@ function setupEventListeners() {
         loadRecipes();
     });
 
-    clearHistoryBtn?.addEventListener('click', () => {
-        localStorage.removeItem(VIEW_HISTORY_KEY);
-        renderViewHistory();
+    clearHistoryBtn?.addEventListener('click', async () => {
+        try {
+            const response = await fetch('/api/recipe/history', {
+                method: 'DELETE',
+                headers: getClientHeaders()
+            });
+            const result = await response.json();
+
+            if (response.ok && result.success) {
+                await renderViewHistory();
+            }
+        } catch (error) {
+            console.error('Error clearing view history:', error);
+        }
     });
 }
 
@@ -245,44 +256,39 @@ function getRecipeUrl(recipe) {
     return `/recipe/${encodeURIComponent(recipe.slug)}`;
 }
 
-function getViewHistory() {
-    try {
-        const raw = localStorage.getItem(VIEW_HISTORY_KEY);
-        if (!raw) {
-            return [];
-        }
-
-        const parsed = JSON.parse(raw);
-        return Array.isArray(parsed) ? parsed : [];
-    } catch (error) {
-        console.error('Error reading view history:', error);
-        return [];
+function getClientKey() {
+    const existingKey = localStorage.getItem(VIEW_HISTORY_CLIENT_KEY);
+    if (existingKey) {
+        return existingKey;
     }
+
+    const generatedKey = self.crypto?.randomUUID?.() || `client-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    localStorage.setItem(VIEW_HISTORY_CLIENT_KEY, generatedKey);
+    return generatedKey;
 }
 
-function saveViewedRecipe(recipe) {
-    if (!recipe?.id || !recipe?.slug) {
+function getClientHeaders() {
+    return {
+        'X-Client-Key': getClientKey()
+    };
+}
+
+async function saveViewedRecipe(recipe) {
+    if (!recipe?.id) {
         return;
     }
 
-    const nextItem = {
-        id: recipe.id,
-        name: recipe.name,
-        slug: recipe.slug,
-        imageFileName: recipe.imageFileName || '',
-        category: recipe.category || 'Рецепт'
-    };
-
-    const history = getViewHistory().filter(item => item.id !== nextItem.id);
-    history.unshift(nextItem);
-
-    localStorage.setItem(
-        VIEW_HISTORY_KEY,
-        JSON.stringify(history.slice(0, VIEW_HISTORY_LIMIT))
-    );
+    try {
+        await fetch(`/api/recipe/${recipe.id}/history`, {
+            method: 'POST',
+            headers: getClientHeaders()
+        });
+    } catch (error) {
+        console.error('Error saving viewed recipe:', error);
+    }
 }
 
-function renderViewHistory() {
+async function renderViewHistory() {
     const section = document.getElementById('viewHistorySection');
     const container = document.getElementById('viewHistoryCards');
 
@@ -290,37 +296,55 @@ function renderViewHistory() {
         return;
     }
 
-    const history = getViewHistory();
-    section.hidden = history.length === 0;
-    container.innerHTML = '';
+    try {
+        const response = await fetch(`/api/recipe/history?limit=${VIEW_HISTORY_LIMIT}`, {
+            headers: getClientHeaders()
+        });
+        const result = await response.json();
+        const history = response.ok && result.success && Array.isArray(result.data) ? result.data : [];
 
-    history.forEach(recipe => {
-        const card = document.createElement('a');
-        card.className = 'catalog-history-card';
-        card.href = getRecipeUrl(recipe) ?? '/in-development';
+        section.hidden = history.length === 0;
+        container.innerHTML = '';
 
-        const image = document.createElement('img');
-        image.src = recipe.imageFileName && recipe.imageFileName.startsWith('https://')
-            ? recipe.imageFileName
-            : `/images/${recipe.imageFileName}`;
-        image.alt = recipe.name;
+        history.forEach(recipe => {
+            const item = {
+                slug: recipe.slug,
+                name: recipe.name,
+                imageFileName: recipe.imageFileName,
+                category: recipe.category || 'Рецепт'
+            };
 
-        const body = document.createElement('div');
-        body.className = 'catalog-history-body';
+            const card = document.createElement('a');
+            card.className = 'catalog-history-card';
+            card.href = getRecipeUrl(item) ?? '/in-development';
 
-        const kicker = document.createElement('p');
-        kicker.className = 'card-kicker';
-        kicker.textContent = recipe.category || 'Рецепт';
+            const image = document.createElement('img');
+            image.src = item.imageFileName && item.imageFileName.startsWith('https://')
+                ? item.imageFileName
+                : `/images/${item.imageFileName}`;
+            image.alt = item.name;
 
-        const title = document.createElement('h4');
-        title.textContent = recipe.name;
+            const body = document.createElement('div');
+            body.className = 'catalog-history-body';
 
-        body.appendChild(kicker);
-        body.appendChild(title);
-        card.appendChild(image);
-        card.appendChild(body);
-        container.appendChild(card);
-    });
+            const kicker = document.createElement('p');
+            kicker.className = 'card-kicker';
+            kicker.textContent = item.category;
+
+            const title = document.createElement('h4');
+            title.textContent = item.name;
+
+            body.appendChild(kicker);
+            body.appendChild(title);
+            card.appendChild(image);
+            card.appendChild(body);
+            container.appendChild(card);
+        });
+    } catch (error) {
+        console.error('Error loading view history:', error);
+        section.hidden = true;
+        container.innerHTML = '';
+    }
 }
 
 function renderRecipes(recipes) {
@@ -337,9 +361,9 @@ function renderRecipes(recipes) {
         const card = document.createElement('a');
         card.className = 'editorial-card catalog-editorial-card';
         card.href = recipeUrl ?? '/in-development';
-        card.addEventListener('click', () => {
-            saveViewedRecipe(recipe);
-            renderViewHistory();
+        card.addEventListener('click', async () => {
+            await saveViewedRecipe(recipe);
+            await renderViewHistory();
         });
 
         const image = document.createElement('img');

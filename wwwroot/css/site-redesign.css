@@ -437,6 +437,8 @@ input[type="submit"],
 }
 
 .catalog-grid {
+  position: relative;
+  z-index: 1;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 18px;
@@ -523,7 +525,7 @@ input[type="submit"],
 
 .catalog-pagination {
   position: relative;
-  z-index: 5;
+  z-index: 1000;
   isolation: isolate;
   display: flex;
   gap: 10px;
@@ -531,11 +533,12 @@ input[type="submit"],
   flex-wrap: wrap;
   margin-top: 28px;
   pointer-events: auto;
+  transform: translateZ(0);
 }
 
 .catalog-pagination .page-btn {
   position: relative;
-  z-index: 6;
+  z-index: 1001;
   pointer-events: auto;
   cursor: pointer;
   border: 1px solid rgba(81, 49, 18, 0.12);

@@ -16,7 +16,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     await renderViewHistory();
     await loadFilters();
     setupEventListeners();
-    updateCatalogSummary();
     await loadRecipes();
 });
 
@@ -36,7 +35,6 @@ function setupEventListeners() {
             searchTimeout = setTimeout(() => {
                 state.searchQuery = query;
                 state.currentPage = 1;
-                updateCatalogSummary();
                 loadRecipes();
             }, 250);
             return;
@@ -45,20 +43,17 @@ function setupEventListeners() {
         hideSuggestions();
         state.searchQuery = '';
         state.currentPage = 1;
-        updateCatalogSummary();
         loadRecipes();
     });
 
     applyBtn?.addEventListener('click', () => {
         updateSelectedFilters();
         state.currentPage = 1;
-        updateCatalogSummary();
         loadRecipes();
     });
 
     resetBtn?.addEventListener('click', () => {
         resetFilters();
-        updateCatalogSummary();
         loadRecipes();
     });
 
@@ -137,22 +132,6 @@ function resetFilters() {
     hideSuggestions();
 }
 
-function updateCatalogSummary() {
-    const summary = document.getElementById('catalogSummary');
-    if (!summary) {
-        return;
-    }
-
-    const parts = [];
-    if (state.searchQuery) parts.push(`поиск: ${state.searchQuery}`);
-    if (state.selectedCategories.length > 0) parts.push(`тип блюда: ${state.selectedCategories.length}`);
-    if (state.selectedIngredients.length > 0) parts.push(`ингредиенты: ${state.selectedIngredients.length}`);
-
-    summary.textContent = parts.length > 0
-        ? `Активные параметры: ${parts.join(' • ')}.`
-        : 'Каталог собирает результаты по текущему поиску и выбранным фильтрам.';
-}
-
 async function getSearchSuggestions(query) {
     try {
         const response = await fetch(`/api/recipe/suggestions?query=${encodeURIComponent(query)}`);
@@ -196,7 +175,6 @@ function renderSuggestions(suggestions) {
             state.searchQuery = suggestion.name;
             state.currentPage = 1;
             hideSuggestions();
-            updateCatalogSummary();
             loadRecipes();
         });
         list.appendChild(item);

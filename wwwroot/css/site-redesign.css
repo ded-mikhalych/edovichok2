@@ -340,8 +340,8 @@ img { max-width: 100%; display: block; }
   position: sticky;
   top: 92px;
   height: auto;
-  max-height: calc(100vh - 120px);
-  overflow-y: auto;
+  max-height: none;
+  overflow: visible;
 }
 
 .recipe-teaser,

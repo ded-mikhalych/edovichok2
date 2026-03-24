@@ -13,12 +13,10 @@ namespace WebApplication.Pages.Api.Recipe;
 public class IndexModel : PageModel
 {
     private readonly ApplicationDbContext _context;
-    private readonly IWebHostEnvironment _environment;
 
-    public IndexModel(ApplicationDbContext context, IWebHostEnvironment environment)
+    public IndexModel(ApplicationDbContext context)
     {
         _context = context;
-        _environment = environment;
     }
 
     public async Task<IActionResult> OnPostAsync(CreateRecipeRequest request)
@@ -62,11 +60,9 @@ public class IndexModel : PageModel
 
         var slug = await GenerateUniqueSlugAsync(request.Title);
         var categoryId = RecipeApiHelpers.ResolveCategoryId(request.Cuisine);
-        var imageFolder = Path.Combine(_environment.WebRootPath, "images", "user");
-        Directory.CreateDirectory(imageFolder);
 
         var mainImageFileName = request.MainImage != null
-            ? await RecipeApiHelpers.SaveImageAsync(request.MainImage, imageFolder, slug + "-main")
+            ? await RecipeApiHelpers.SaveImageAsync(request.MainImage)
             : SiteContentService.DefaultExternalImage;
 
         var recipe = new RecipeEntity

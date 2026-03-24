@@ -115,27 +115,25 @@ internal static class RecipeApiHelpers
         });
     }
 
-    public static async Task<string> SaveImageAsync(IFormFile file, string folderPath, string filePrefix)
+    public static async Task<string> SaveImageAsync(IFormFile file)
     {
-        var extension = Path.GetExtension(file.FileName);
-        if (string.IsNullOrWhiteSpace(extension))
+        await using var stream = file.OpenReadStream();
+        using var memoryStream = new MemoryStream();
+        await stream.CopyToAsync(memoryStream);
+
+        var contentType = string.IsNullOrWhiteSpace(file.ContentType)
+            ? "image/jpeg"
+            : file.ContentType.Trim().ToLowerInvariant();
+
+        if (contentType != "image/jpeg" &&
+            contentType != "image/png" &&
+            contentType != "image/webp")
         {
-            extension = ".jpg";
+            contentType = "image/jpeg";
         }
 
-        var safeExt = extension.ToLowerInvariant();
-        if (safeExt != ".jpg" && safeExt != ".jpeg" && safeExt != ".png" && safeExt != ".webp")
-        {
-            safeExt = ".jpg";
-        }
-
-        var fileName = $"{filePrefix}-{Guid.NewGuid():N}{safeExt}";
-        var fullPath = Path.Combine(folderPath, fileName);
-
-        await using var stream = new FileStream(fullPath, FileMode.Create);
-        await file.CopyToAsync(stream);
-
-        return $"user/{fileName}";
+        var base64 = Convert.ToBase64String(memoryStream.ToArray());
+        return $"data:{contentType};base64,{base64}";
     }
 
     public static string? GetClientKey(HttpRequest request)

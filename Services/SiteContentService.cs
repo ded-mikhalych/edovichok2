@@ -149,7 +149,8 @@ public class SiteContentService
             return DefaultExternalImage;
         }
 
-        return imageFileName.StartsWith("https://", StringComparison.OrdinalIgnoreCase)
+        return imageFileName.StartsWith("data:image/", StringComparison.OrdinalIgnoreCase) ||
+               imageFileName.StartsWith("https://", StringComparison.OrdinalIgnoreCase)
             ? imageFileName
             : $"/images/{imageFileName}";
     }

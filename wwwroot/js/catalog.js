@@ -21,6 +21,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 function setupEventListeners() {
     const searchInput = document.getElementById('searchInput');
+    const searchBtn = document.getElementById('searchBtn');
     const clearHistoryBtn = document.getElementById('clearHistoryBtn');
     const applyBtn = document.getElementById('applyBtn');
     const resetBtn = document.getElementById('resetBtn');
@@ -31,19 +32,26 @@ function setupEventListeners() {
         clearTimeout(searchTimeout);
 
         if (query.length > 0) {
-            getSearchSuggestions(query);
             searchTimeout = setTimeout(() => {
-                state.searchQuery = query;
-                state.currentPage = 1;
-                loadRecipes();
+                getSearchSuggestions(query);
             }, 250);
             return;
         }
 
         hideSuggestions();
-        state.searchQuery = '';
-        state.currentPage = 1;
-        loadRecipes();
+    });
+
+    searchInput?.addEventListener('keydown', event => {
+        if (event.key !== 'Enter') {
+            return;
+        }
+
+        event.preventDefault();
+        performSearch();
+    });
+
+    searchBtn?.addEventListener('click', () => {
+        performSearch();
     });
 
     applyBtn?.addEventListener('click', () => {
@@ -72,6 +80,14 @@ function setupEventListeners() {
             console.error('Error clearing view history:', error);
         }
     });
+}
+
+function performSearch() {
+    const searchInput = document.getElementById('searchInput');
+    state.searchQuery = searchInput?.value.trim() || '';
+    state.currentPage = 1;
+    hideSuggestions();
+    loadRecipes();
 }
 
 async function loadFilters() {

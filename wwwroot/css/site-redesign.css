@@ -403,7 +403,16 @@ input[type="submit"],
   letter-spacing: 0.08em;
 }
 
-.search-wrapper { position: relative; }
+.catalog-search-controls {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.search-wrapper {
+  position: relative;
+  flex: 1;
+}
 
 #searchInput,
 .recipe-form-card input[type="text"],
@@ -853,6 +862,10 @@ input[type="submit"] {
   .catalog-history-header {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .catalog-search-controls {
+    flex-direction: column;
   }
 
   .editorial-grid,

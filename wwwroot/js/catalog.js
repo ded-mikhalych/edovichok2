@@ -296,14 +296,13 @@ function renderRecipes(recipes) {
 
     recipes.forEach(recipe => {
         const recipeUrl = getRecipeUrl(recipe);
-        const card = document.createElement('article');
-        card.className = 'recipe-card-wrapper';
+        const card = document.createElement('a');
+        card.className = 'editorial-card catalog-editorial-card';
         if (recipeUrl) {
-            card.style.cursor = 'pointer';
+            card.href = recipeUrl;
+        } else {
+            card.href = '/in-development';
         }
-
-        const content = document.createElement('div');
-        content.className = 'recipe-compact-card';
 
         const image = document.createElement('img');
         image.src = recipe.imageFileName && recipe.imageFileName.startsWith('https://')
@@ -311,25 +310,21 @@ function renderRecipes(recipes) {
             : `/images/${recipe.imageFileName}`;
         image.alt = recipe.name;
 
+        const body = document.createElement('div');
+        body.className = 'editorial-card-body catalog-editorial-body';
+
         const kicker = document.createElement('p');
-        kicker.className = 'recipe-compact-kicker';
+        kicker.className = 'card-kicker';
         kicker.textContent = recipe.category || 'Рецепт';
 
-        const title = document.createElement('h4');
-        title.className = 'recipe-compact-title';
+        const title = document.createElement('h3');
         title.textContent = recipe.name;
 
-        content.appendChild(image);
-        content.appendChild(kicker);
-        content.appendChild(title);
+        body.appendChild(kicker);
+        body.appendChild(title);
 
-        card.appendChild(content);
-
-        if (recipeUrl) {
-            card.addEventListener('click', () => {
-                window.location.href = recipeUrl;
-            });
-        }
+        card.appendChild(image);
+        card.appendChild(body);
 
         container.appendChild(card);
     });

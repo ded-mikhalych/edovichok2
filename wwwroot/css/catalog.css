@@ -48,11 +48,11 @@
 }
 
 .catalog-history {
-    margin-bottom: 24px;
-    padding: 18px;
+    margin-top: 28px;
+    padding: 14px 16px;
     border: 1px solid var(--border);
-    border-radius: 24px;
-    background: #fff;
+    border-radius: 18px;
+    background: #fcfaf7;
 }
 
 .catalog-history-header {
@@ -65,23 +65,28 @@
 
 .catalog-history-header h3 {
     margin: 4px 0 0;
-    font-size: 1.1rem;
+    font-size: 0.98rem;
     color: var(--accent);
 }
 
 .catalog-history-grid {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 14px;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(180px, 220px);
+    gap: 10px;
+    overflow-x: auto;
+    padding-bottom: 6px;
+    scroll-snap-type: x proximity;
 }
 
 .catalog-history-card {
     display: block;
     overflow: hidden;
-    border-radius: 18px;
-    background: #faf7f2;
+    border-radius: 14px;
+    background: #fff;
     border: 1px solid var(--border);
     transition: transform 0.18s ease, box-shadow 0.18s ease;
+    scroll-snap-align: start;
 }
 
 .catalog-history-card:hover {
@@ -91,23 +96,24 @@
 
 .catalog-history-card img {
     width: 100%;
-    height: 132px;
+    height: 92px;
     object-fit: cover;
     display: block;
 }
 
 .catalog-history-body {
-    padding: 12px 14px 14px;
+    padding: 8px 10px 10px;
 }
 
 .catalog-history-body .card-kicker {
-    margin: 0 0 8px;
+    margin: 0 0 4px;
+    font-size: 0.72rem;
 }
 
 .catalog-history-body h4 {
     margin: 0;
-    font-size: 0.98rem;
-    line-height: 1.35;
+    font-size: 0.84rem;
+    line-height: 1.3;
     color: var(--accent);
 }
 
@@ -205,14 +211,12 @@
 }
 
 @media (max-width: 1100px) {
-    .catalog-history-grid,
     #cards {
         grid-template-columns: repeat(3, minmax(0, 1fr));
     }
 }
 
 @media (max-width: 900px) {
-    .catalog-history-grid,
     #cards {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
@@ -228,13 +232,15 @@
         max-width: none;
     }
 
-    .catalog-history-grid,
     #cards {
         grid-template-columns: 1fr;
     }
 
-    .catalog-history-card img,
     .catalog-editorial-card img {
-        height: 180px;
+        height: 140px;
+    }
+
+    .catalog-history-grid {
+        grid-auto-columns: minmax(160px, 76vw);
     }
 }

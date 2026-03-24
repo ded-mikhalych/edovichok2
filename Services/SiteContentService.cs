@@ -23,7 +23,7 @@ public class SiteContentService
         var newestRecipes = await _context.Recipes
             .Include(r => r.Category)
             .OrderByDescending(r => r.CreatedAt)
-            .Take(6)
+            .Take(4)
             .ToListAsync();
 
         return new HomeViewModel

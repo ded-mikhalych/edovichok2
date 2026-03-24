@@ -10,7 +10,7 @@ const state = {
     currentPage: 1
 };
 
-let activeRecipesRequestId = 0;
+let recipesAbortController = null;
 
 document.addEventListener('DOMContentLoaded', async () => {
     await renderViewHistory();
@@ -82,6 +82,7 @@ function renderIngredients(ingredients) {
 function setupEventListeners() {
     const searchInput = document.getElementById('searchInput');
     const clearHistoryBtn = document.getElementById('clearHistoryBtn');
+    const pagination = document.getElementById('pagination');
     let searchTimeout;
 
     searchInput.addEventListener('input', event => {
@@ -115,6 +116,21 @@ function setupEventListeners() {
     document.getElementById('resetBtn').addEventListener('click', () => {
         resetFilters();
         updateCatalogSummary();
+        loadRecipes();
+    });
+
+    pagination?.addEventListener('click', event => {
+        const button = event.target.closest('[data-page]');
+        if (!button) {
+            return;
+        }
+
+        const nextPage = Number(button.dataset.page);
+        if (!Number.isInteger(nextPage) || nextPage < 1 || nextPage === state.currentPage) {
+            return;
+        }
+
+        state.currentPage = nextPage;
         loadRecipes();
     });
 
@@ -229,33 +245,40 @@ function updateSelectedFilters() {
 }
 
 async function loadRecipes() {
-    const requestId = ++activeRecipesRequestId;
+    updateSelectedFilters();
+
+    if (recipesAbortController) {
+        recipesAbortController.abort();
+    }
+
+    recipesAbortController = new AbortController();
 
     try {
-        updateSelectedFilters();
-
         const params = new URLSearchParams();
         if (state.searchQuery) params.append('query', state.searchQuery);
         state.selectedCategories.forEach(cat => params.append('categories', cat));
         state.selectedIngredients.forEach(ingredient => params.append('ingredients', ingredient));
-        params.append('page', state.currentPage);
-        params.append('pageSize', PAGE_SIZE);
+        params.append('page', String(state.currentPage));
+        params.append('pageSize', String(PAGE_SIZE));
 
-        const response = await fetch(`/api/recipe/search?${params.toString()}`);
+        const response = await fetch(`/api/recipe/search?${params.toString()}`, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            signal: recipesAbortController.signal
+        });
         const result = await response.json();
 
-        if (requestId !== activeRecipesRequestId) {
-            return;
+        if (!result.success) {
+            throw new Error(result.message || 'Search request failed.');
         }
 
-        if (result.success) {
-            state.currentPage = Number.isFinite(result.page) ? result.page : state.currentPage;
-            renderRecipes(result.data);
-            updateRecipesCount(result.count);
-            renderPagination(result.page, result.totalPages);
-        }
+        state.currentPage = Number.isInteger(result.page) ? result.page : state.currentPage;
+        renderRecipes(Array.isArray(result.data) ? result.data : []);
+        updateRecipesCount(result.count || 0);
+        renderPagination(result.page || 1, result.totalPages || 0);
     } catch (error) {
-        if (requestId !== activeRecipesRequestId) {
+        if (error.name === 'AbortError') {
             return;
         }
 
@@ -453,45 +476,23 @@ function renderPagination(currentPage, totalPages) {
         return;
     }
 
-    const previousButton = document.createElement('button');
-    previousButton.type = 'button';
-    previousButton.className = 'page-btn';
-    previousButton.textContent = '←';
-    previousButton.disabled = currentPage <= 1;
-    previousButton.addEventListener('click', () => {
-        if (state.currentPage > 1) {
-            state.currentPage -= 1;
-            loadRecipes();
-        }
-    });
-    container.appendChild(previousButton);
+    container.appendChild(createPaginationButton('<', currentPage - 1, currentPage <= 1, false));
 
     for (let page = 1; page <= totalPages; page++) {
-        const button = document.createElement('button');
-        button.type = 'button';
-        button.className = 'page-btn' + (page === currentPage ? ' active' : '');
-        button.textContent = page;
-        button.addEventListener('click', () => {
-            if (page !== state.currentPage) {
-                state.currentPage = page;
-                loadRecipes();
-            }
-        });
-        container.appendChild(button);
+        container.appendChild(createPaginationButton(String(page), page, false, page === currentPage));
     }
 
-    const nextButton = document.createElement('button');
-    nextButton.type = 'button';
-    nextButton.className = 'page-btn';
-    nextButton.textContent = '→';
-    nextButton.disabled = currentPage >= totalPages;
-    nextButton.addEventListener('click', () => {
-        if (state.currentPage < totalPages) {
-            state.currentPage += 1;
-            loadRecipes();
-        }
-    });
-    container.appendChild(nextButton);
+    container.appendChild(createPaginationButton('>', currentPage + 1, currentPage >= totalPages, false));
+}
+
+function createPaginationButton(label, page, disabled, isActive) {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'page-btn' + (isActive ? ' active' : '');
+    button.textContent = label;
+    button.disabled = disabled;
+    button.dataset.page = String(page);
+    return button;
 }
 
 document.addEventListener('click', event => {

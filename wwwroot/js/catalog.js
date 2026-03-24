@@ -310,36 +310,20 @@ async function renderViewHistory() {
             const card = document.createElement('a');
             card.className = 'catalog-history-card';
             card.href = getRecipeUrl(recipe) ?? '/in-development';
-            card.style.display = 'block';
-            card.style.flex = '0 0 136px';
-            card.style.width = '136px';
-            card.style.minWidth = '136px';
-            card.style.maxWidth = '136px';
 
             const image = document.createElement('img');
             image.src = getRecipeImageSrc(recipe.imageFileName);
             image.alt = recipe.name;
-            image.style.width = '100%';
-            image.style.height = '76px';
-            image.style.objectFit = 'cover';
-            image.style.display = 'block';
 
             const body = document.createElement('div');
             body.className = 'catalog-history-body';
-            body.style.padding = '7px 8px 8px';
 
             const kicker = document.createElement('p');
             kicker.className = 'card-kicker';
             kicker.textContent = recipe.category || 'Рецепт';
-            kicker.style.margin = '0 0 3px';
-            kicker.style.fontSize = '0.68rem';
-            kicker.style.lineHeight = '1.15';
 
             const title = document.createElement('h4');
             title.textContent = recipe.name;
-            title.style.margin = '0';
-            title.style.fontSize = '0.76rem';
-            title.style.lineHeight = '1.22';
 
             body.appendChild(kicker);
             body.appendChild(title);

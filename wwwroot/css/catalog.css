@@ -49,10 +49,11 @@
 
 .catalog-sidebar {
     align-self: start;
+    position: relative;
 }
 
 .catalog-sidebar .sidebar-card {
-    position: sticky;
+    position: sticky !important;
     top: 24px;
     max-height: calc(100vh - 48px);
     overflow-y: auto;

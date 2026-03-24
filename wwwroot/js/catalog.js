@@ -297,6 +297,13 @@ async function renderViewHistory() {
     }
 
     try {
+        section.style.padding = '28px';
+        section.style.background = '#fff';
+        section.style.border = '1px solid rgba(93, 58, 27, 0.1)';
+        section.style.borderRadius = '28px';
+        section.style.boxShadow = '0 18px 40px rgba(84, 50, 23, 0.08)';
+        section.style.marginTop = '28px';
+
         container.style.display = 'flex';
         container.style.flexWrap = 'nowrap';
         container.style.alignItems = 'stretch';

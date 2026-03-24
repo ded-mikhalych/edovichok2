@@ -122,6 +122,16 @@ public static class SiteContentSeed
             "young-potatoes"
         };
 
+        var malformedLegacyRecipes = dbContext.Recipes
+            .Include(r => r.Ingredients)
+            .Include(r => r.Steps)
+            .Where(r =>
+                !seedIds.Contains(r.Id) &&
+                r.Name != null &&
+                EF.Functions.Like(r.Name.ToLower(), "%картоф%") &&
+                EF.Functions.Like(r.Name.ToLower(), "%кур%"))
+            .ToList();
+
         var duplicatesToRemove = dbContext.Recipes
             .Include(r => r.Ingredients)
             .Include(r => r.Steps)
@@ -135,6 +145,12 @@ public static class SiteContentSeed
         if (duplicatesToRemove.Count > 0)
         {
             dbContext.Recipes.RemoveRange(duplicatesToRemove);
+            dbContext.SaveChanges();
+        }
+
+        if (malformedLegacyRecipes.Count > 0)
+        {
+            dbContext.Recipes.RemoveRange(malformedLegacyRecipes);
             dbContext.SaveChanges();
         }
 

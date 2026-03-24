@@ -379,7 +379,7 @@ function renderRecipes(recipes) {
 function updateRecipesCount(count) {
     const counter = document.getElementById('recipesCount');
     if (counter) {
-        counter.textContent = `РќР°Р№РґРµРЅРѕ СЂРµС†РµРїС‚РѕРІ: ${count}`;
+        counter.textContent = `Найдено рецептов: ${count}`;
     }
 }
 

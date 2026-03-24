@@ -82,7 +82,6 @@ function renderIngredients(ingredients) {
 function setupEventListeners() {
     const searchInput = document.getElementById('searchInput');
     const clearHistoryBtn = document.getElementById('clearHistoryBtn');
-    const pagination = document.getElementById('pagination');
     let searchTimeout;
 
     searchInput.addEventListener('input', event => {
@@ -116,21 +115,6 @@ function setupEventListeners() {
     document.getElementById('resetBtn').addEventListener('click', () => {
         resetFilters();
         updateCatalogSummary();
-        loadRecipes();
-    });
-
-    pagination?.addEventListener('click', event => {
-        const button = event.target.closest('[data-page]');
-        if (!button) {
-            return;
-        }
-
-        const nextPage = Number(button.dataset.page);
-        if (!Number.isInteger(nextPage) || nextPage < 1 || nextPage === state.currentPage) {
-            return;
-        }
-
-        state.currentPage = nextPage;
         loadRecipes();
     });
 
@@ -492,6 +476,16 @@ function createPaginationButton(label, page, disabled, isActive) {
     button.textContent = label;
     button.disabled = disabled;
     button.dataset.page = String(page);
+    button.addEventListener('click', event => {
+        event.preventDefault();
+
+        if (disabled || page < 1 || page === state.currentPage) {
+            return;
+        }
+
+        state.currentPage = page;
+        loadRecipes();
+    });
     return button;
 }
 

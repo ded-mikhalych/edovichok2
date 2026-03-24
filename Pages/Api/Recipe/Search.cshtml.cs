@@ -18,7 +18,11 @@ public class SearchModel : PageModel
     {
         try
         {
-            var recipesQuery = _context.Recipes.Include(r => r.Category).AsQueryable();
+            var recipesQuery = _context.Recipes
+                .Include(r => r.Category)
+                .Include(r => r.Ingredients)
+                .AsNoTracking()
+                .AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(query))
             {
@@ -36,21 +40,26 @@ public class SearchModel : PageModel
                     categories.Contains(r.Category.Name));
             }
 
+            var recipes = await recipesQuery
+                .OrderByDescending(r => r.CreatedAt)
+                .ToListAsync();
+
             if (ingredients != null && ingredients.Length > 0)
             {
                 foreach (var ingredient in ingredients.Where(i => !string.IsNullOrWhiteSpace(i)).Select(i => i.Trim()))
                 {
-                    var localIngredient = ingredient;
-                    recipesQuery = recipesQuery.Where(r =>
-                        r.Ingredients.Any(i => EF.Functions.ILike(i.DisplayText, $"%{localIngredient}%")));
+                    recipes = recipes
+                        .Where(r => RecipeApiHelpers.MatchesIngredientFilter(
+                            r.Ingredients.Select(i => i.DisplayText),
+                            ingredient))
+                        .ToList();
                 }
             }
 
-            var totalCount = await recipesQuery.CountAsync();
+            var totalCount = recipes.Count;
             var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
 
-            var recipes = await recipesQuery
-                .OrderByDescending(r => r.CreatedAt)
+            var pagedRecipes = recipes
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .Select(r => new
@@ -64,12 +73,12 @@ public class SearchModel : PageModel
                     r.CookingTime,
                     Category = r.Category != null ? r.Category.DisplayName : null
                 })
-                .ToListAsync();
+                .ToList();
 
             return new JsonResult(new
             {
                 success = true,
-                data = recipes,
+                data = pagedRecipes,
                 count = totalCount,
                 page,
                 pageSize,

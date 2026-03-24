@@ -324,11 +324,25 @@ img { max-width: 100%; display: block; }
 .recipe-shell {
   display: grid;
   gap: 24px;
+  align-items: start;
 }
 
 .split-section { grid-template-columns: minmax(0, 1.25fr) minmax(300px, 0.95fr); }
 .catalog-shell { grid-template-columns: minmax(280px, 0.9fr) minmax(0, 1.5fr); }
 .recipe-shell { grid-template-columns: minmax(260px, 0.78fr) minmax(0, 1.4fr); }
+
+.catalog-sidebar {
+  display: block;
+  align-self: start;
+}
+
+.catalog-sidebar .sidebar-card {
+  position: sticky;
+  top: 92px;
+  height: auto;
+  max-height: calc(100vh - 120px);
+  overflow-y: auto;
+}
 
 .recipe-teaser,
 .category-entry {

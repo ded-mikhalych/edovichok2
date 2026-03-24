@@ -205,10 +205,17 @@ namespace WebApplication.Controllers
                     data = new
                     {
                         recipe.Id,
+                        recipe.Slug,
                         Name = recipe.Name ?? string.Empty,
                         Category = recipe.Category?.DisplayName ?? "Не указан",
                         recipe.CookingTime,
-                        Description = recipe.Description ?? string.Empty
+                        Description = recipe.Description ?? string.Empty,
+                        Ingredients = await _context.RecipeIngredients
+                            .Where(i => i.RecipeId == recipe.Id)
+                            .OrderBy(i => i.SortOrder)
+                            .Take(5)
+                            .Select(i => i.DisplayText)
+                            .ToListAsync()
                     }
                 });
             }

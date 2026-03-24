@@ -4,14 +4,18 @@ const state = {
     selectedCategories: [],
     selectedIngredients: [],
     searchQuery: '',
-    currentPage: 1
+    currentPage: 1,
+    totalPages: 1,
+    totalCount: 0
 };
+
+const previewCache = new Map();
 
 document.addEventListener('DOMContentLoaded', async () => {
     await loadFilters();
     setupEventListeners();
     updateCatalogSummary();
-    await loadRecipes();
+    await loadRecipes({ append: false });
 });
 
 async function loadFilters() {
@@ -87,14 +91,14 @@ function setupEventListeners() {
                 state.searchQuery = query;
                 state.currentPage = 1;
                 updateCatalogSummary();
-                loadRecipes();
+                loadRecipes({ append: false });
             }, 250);
         } else {
             hideSuggestions();
             state.searchQuery = '';
             state.currentPage = 1;
             updateCatalogSummary();
-            loadRecipes();
+            loadRecipes({ append: false });
         }
     });
 
@@ -102,13 +106,33 @@ function setupEventListeners() {
         updateSelectedFilters();
         state.currentPage = 1;
         updateCatalogSummary();
-        loadRecipes();
+        loadRecipes({ append: false });
     });
 
     document.getElementById('resetBtn').addEventListener('click', () => {
         resetFilters();
         updateCatalogSummary();
-        loadRecipes();
+        loadRecipes({ append: false });
+    });
+
+    document.getElementById('loadMoreBtn').addEventListener('click', () => {
+        if (state.currentPage < state.totalPages) {
+            state.currentPage += 1;
+            loadRecipes({ append: true });
+        }
+    });
+
+    document.getElementById('closePreviewBtn').addEventListener('click', closePreview);
+    document.getElementById('recipePreviewModal').addEventListener('click', event => {
+        if (event.target instanceof HTMLElement && event.target.dataset.closePreview === 'true') {
+            closePreview();
+        }
+    });
+
+    document.addEventListener('keydown', event => {
+        if (event.key === 'Escape') {
+            closePreview();
+        }
     });
 }
 
@@ -127,25 +151,27 @@ function resetFilters() {
 
 function updateCatalogSummary() {
     const summary = document.getElementById('catalogSummary');
-    if (summary) {
-        const parts = [];
-
-        if (state.searchQuery) {
-            parts.push(`поиск: ${state.searchQuery}`);
-        }
-
-        if (state.selectedCategories.length > 0) {
-            parts.push(`тип блюда: ${state.selectedCategories.length}`);
-        }
-
-        if (state.selectedIngredients.length > 0) {
-            parts.push(`ингредиенты: ${state.selectedIngredients.length}`);
-        }
-
-        summary.textContent = parts.length > 0
-            ? `Активные параметры: ${parts.join(' • ')}.`
-            : 'Каталог собирает результаты по текущему поиску и выбранным фильтрам.';
+    if (!summary) {
+        return;
     }
+
+    const parts = [];
+
+    if (state.searchQuery) {
+        parts.push(`поиск: ${state.searchQuery}`);
+    }
+
+    if (state.selectedCategories.length > 0) {
+        parts.push(`тип блюда: ${state.selectedCategories.length}`);
+    }
+
+    if (state.selectedIngredients.length > 0) {
+        parts.push(`ингредиенты: ${state.selectedIngredients.length}`);
+    }
+
+    summary.textContent = parts.length > 0
+        ? `Активные параметры: ${parts.join(' • ')}.`
+        : 'Каталог собирает результаты по текущему поиску и выбранным фильтрам.';
 }
 
 async function getSearchSuggestions(query) {
@@ -183,7 +209,7 @@ function renderSuggestions(suggestions) {
             state.currentPage = 1;
             hideSuggestions();
             updateCatalogSummary();
-            loadRecipes();
+            loadRecipes({ append: false });
         });
         list.appendChild(item);
     });
@@ -203,7 +229,7 @@ function updateSelectedFilters() {
     state.selectedIngredients = Array.from(document.querySelectorAll('.ingredient-filter:checked')).map(el => el.value);
 }
 
-async function loadRecipes() {
+async function loadRecipes({ append }) {
     try {
         updateSelectedFilters();
 
@@ -218,13 +244,17 @@ async function loadRecipes() {
         const result = await response.json();
 
         if (result.success) {
-            renderRecipes(result.data);
+            state.totalPages = result.totalPages || 1;
+            state.totalCount = result.count || 0;
+
+            renderRecipes(result.data, append);
             updateRecipesCount(result.count);
-            renderPagination(result.page, result.totalPages);
+            renderLoadMoreButton();
         }
     } catch (error) {
         console.error('Error loading recipes:', error);
         document.getElementById('cards').innerHTML = '<article class="catalog-empty"><p class="card-kicker">Ошибка</p><h3>Не удалось загрузить рецепты.</h3><p>Попробуйте обновить страницу немного позже.</p></article>';
+        renderLoadMoreButton();
     }
 }
 
@@ -233,24 +263,26 @@ function getRecipeUrl(recipe) {
     return `/recipe/${encodeURIComponent(recipe.slug)}`;
 }
 
-function renderRecipes(recipes) {
+function renderRecipes(recipes, append) {
     const container = document.getElementById('cards');
-    container.innerHTML = '';
 
-    if (recipes.length === 0) {
+    if (!append) {
+        container.innerHTML = '';
+    }
+
+    if (!append && recipes.length === 0) {
         container.innerHTML = '<article class="catalog-empty"><p class="card-kicker">Пустой результат</p><h3>По этому сочетанию фильтров пока ничего не найдено.</h3><p>Попробуйте снять часть ограничений или выбрать другой ингредиент.</p></article>';
         return;
     }
 
     recipes.forEach(recipe => {
         const recipeUrl = getRecipeUrl(recipe);
-        const card = document.createElement('a');
+        const card = document.createElement('article');
         card.className = 'editorial-card catalog-editorial-card';
-        if (recipeUrl) {
-            card.href = recipeUrl;
-        } else {
-            card.href = '/in-development';
-        }
+
+        const link = document.createElement('a');
+        link.className = 'catalog-card-link';
+        link.href = recipeUrl ?? '/in-development';
 
         const image = document.createElement('img');
         image.src = recipe.imageFileName && recipe.imageFileName.startsWith('https://')
@@ -270,10 +302,17 @@ function renderRecipes(recipes) {
 
         body.appendChild(kicker);
         body.appendChild(title);
+        link.appendChild(image);
+        link.appendChild(body);
 
-        card.appendChild(image);
-        card.appendChild(body);
+        const previewButton = document.createElement('button');
+        previewButton.type = 'button';
+        previewButton.className = 'catalog-preview-button';
+        previewButton.textContent = 'Быстрый просмотр';
+        previewButton.addEventListener('click', () => openPreview(recipe.id, recipe.name));
 
+        card.appendChild(link);
+        card.appendChild(previewButton);
         container.appendChild(card);
     });
 }
@@ -282,24 +321,72 @@ function updateRecipesCount(count) {
     document.getElementById('recipesCount').textContent = `Найдено рецептов: ${count}`;
 }
 
-function renderPagination(currentPage, totalPages) {
-    const container = document.getElementById('pagination');
-    container.innerHTML = '';
+function renderLoadMoreButton() {
+    const button = document.getElementById('loadMoreBtn');
+    const shouldShow = state.totalCount > 0 && state.currentPage < state.totalPages;
 
-    if (totalPages <= 1) return;
+    button.hidden = !shouldShow;
+    button.disabled = !shouldShow;
+}
 
-    for (let page = 1; page <= totalPages; page++) {
-        const button = document.createElement('button');
-        button.className = 'page-btn' + (page === currentPage ? ' active' : '');
-        button.textContent = page;
-        button.addEventListener('click', () => {
-            if (page !== state.currentPage) {
-                state.currentPage = page;
-                loadRecipes();
+async function openPreview(recipeId, recipeName) {
+    const modal = document.getElementById('recipePreviewModal');
+    const title = document.getElementById('recipePreviewTitle');
+    const category = document.getElementById('recipePreviewCategory');
+    const time = document.getElementById('recipePreviewTime');
+    const description = document.getElementById('recipePreviewDescription');
+    const ingredients = document.getElementById('recipePreviewIngredients');
+    const link = document.getElementById('recipePreviewLink');
+
+    modal.hidden = false;
+    document.body.style.overflow = 'hidden';
+
+    title.textContent = recipeName;
+    category.textContent = 'Загрузка...';
+    time.textContent = '';
+    description.textContent = 'Подгружаем краткое описание рецепта.';
+    ingredients.innerHTML = '';
+    link.href = '/catalog';
+
+    let preview = previewCache.get(recipeId);
+
+    if (!preview) {
+        try {
+            const response = await fetch(`/api/recipe/${recipeId}/preview`);
+            const result = await response.json();
+
+            if (!result.success) {
+                throw new Error('Preview load failed');
             }
-        });
-        container.appendChild(button);
+
+            preview = result.data;
+            previewCache.set(recipeId, preview);
+        } catch (error) {
+            category.textContent = 'Рецепт';
+            description.textContent = 'Не удалось загрузить быстрый просмотр. Попробуйте открыть полную страницу рецепта.';
+            link.textContent = 'Открыть рецепт';
+            return;
+        }
     }
+
+    category.textContent = preview.category || 'Рецепт';
+    time.textContent = preview.cookingTime ? `Время: ${preview.cookingTime} мин` : '';
+    description.textContent = preview.description || 'Описание пока не добавлено.';
+    link.href = preview.slug ? `/recipe/${encodeURIComponent(preview.slug)}` : '/in-development';
+    link.textContent = 'Открыть рецепт';
+
+    ingredients.innerHTML = '';
+    (preview.ingredients || []).forEach(item => {
+        const li = document.createElement('li');
+        li.textContent = item;
+        ingredients.appendChild(li);
+    });
+}
+
+function closePreview() {
+    const modal = document.getElementById('recipePreviewModal');
+    modal.hidden = true;
+    document.body.style.overflow = '';
 }
 
 document.addEventListener('click', event => {

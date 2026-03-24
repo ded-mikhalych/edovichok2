@@ -54,9 +54,27 @@
         </div>
 
         <div id="cards" class="catalog-grid"></div>
-        <div id="pagination" class="catalog-pagination"></div>
+        <div class="catalog-actions">
+            <button id="loadMoreBtn" type="button" class="button button-secondary catalog-load-more" hidden>Показать ещё</button>
+        </div>
     </section>
 </section>
+
+<div id="recipePreviewModal" class="recipe-preview-modal" hidden>
+    <div class="recipe-preview-backdrop" data-close-preview="true"></div>
+    <section class="recipe-preview-panel" role="dialog" aria-modal="true" aria-labelledby="recipePreviewTitle">
+        <button type="button" class="recipe-preview-close" id="closePreviewBtn" aria-label="Закрыть">×</button>
+        <p class="card-kicker" id="recipePreviewCategory">Рецепт</p>
+        <h3 id="recipePreviewTitle">Быстрый просмотр</h3>
+        <p class="recipe-preview-time" id="recipePreviewTime"></p>
+        <p class="recipe-preview-description" id="recipePreviewDescription"></p>
+        <div class="recipe-preview-ingredients">
+            <p class="recipe-preview-subtitle">Основные ингредиенты</p>
+            <ul id="recipePreviewIngredients"></ul>
+        </div>
+        <a id="recipePreviewLink" class="button button-primary" href="/catalog">Открыть рецепт</a>
+    </section>
+</div>
 
 @section Scripts {
     <script src="~/js/catalog.js" asp-append-version="true"></script>
